@@ -1,7 +1,9 @@
-package com.example.demo;
+package com.example.demo.domain;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
@@ -12,13 +14,14 @@ import java.time.Instant;
 @Getter
 @Setter
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "document_versions")
 public class DocumentVersion {
     @Id
-    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "document_versions_id_gen")
-    @SequenceGenerator(name = "document_versions_id_gen", sequenceName = "document_versions_version_id_seq", allocationSize = 1)
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "version_id", nullable = false)
-    private Integer id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
@@ -26,7 +29,7 @@ public class DocumentVersion {
     private Document document;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @OnDelete(action = OnDeleteAction.CASCADE)
     @JoinColumn(name = "author_user_id", nullable = false)
     private User authorUser;
 

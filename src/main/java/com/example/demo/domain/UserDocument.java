@@ -1,7 +1,9 @@
-package com.example.demo;
+package com.example.demo.domain;
 
 import jakarta.persistence.*;
+import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
@@ -12,6 +14,8 @@ import java.time.Instant;
 @Getter
 @Setter
 @Entity
+@AllArgsConstructor
+@NoArgsConstructor
 @Table(name = "user_documents")
 public class UserDocument {
     @SequenceGenerator(name = "user_documents_id_gen", sequenceName = "users_user_id_seq", allocationSize = 1)

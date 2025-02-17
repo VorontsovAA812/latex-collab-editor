@@ -13,6 +13,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
+import java.time.Instant;
 import java.util.Optional;
 
 @Service
@@ -44,6 +45,8 @@ public class RegistrationServiceImpl implements RegistrationService {
         User newUser = new User();
         newUser.setUsername(username);
         newUser.setPassword(password); // Рекомендуется хранить пароль в зашифрованном виде
+        newUser.setCreatedAt(Instant.now());  // устанавливаем время регистрации
+
         userRepo.saveAndFlush(newUser);
 
         return new RegistrationResult(true, "Пользователь успешно зарегистрирован!");

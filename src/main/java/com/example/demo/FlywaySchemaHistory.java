@@ -17,7 +17,7 @@ import java.time.Instant;
 public class FlywaySchemaHistory {
     @Id
     @Column(name = "installed_rank", nullable = false)
-    private Integer id;
+    private Long id;
 
     @Column(name = "version", length = 50)
     private String version;
