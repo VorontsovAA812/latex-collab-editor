@@ -9,11 +9,12 @@ import java.util.Objects;
 public class UserDto {
     private String username;
     private String role;
-
+    private Boolean isOnline;
     // Конструктор для всех полей
-    public UserDto(String username, String role) {
+    public UserDto(String username, String role,Boolean isOnline) {
         this.username = username;
         this.role = role;
+        this.isOnline = isOnline;
     }
 
     // Пустой конструктор, если он необходим

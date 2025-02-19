@@ -41,7 +41,12 @@ public class WebSecurityConfig {
                 )
                 .logout((logout) -> logout.permitAll())
                 .csrf((csrf) -> csrf.disable()); // Современный способ отключения CSRF
-
+       /* http
+                .authorizeHttpRequests((requests) -> requests
+                        .anyRequest().permitAll()
+                )
+                .csrf((csrf) -> csrf.disable());
+*/
 
         return http.build();
     }
