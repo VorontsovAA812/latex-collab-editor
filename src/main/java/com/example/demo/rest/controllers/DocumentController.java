@@ -25,10 +25,13 @@ public class DocumentController {
 
     @PostMapping("/create")
     public ResponseEntity<Map<String, Long>> createDocument(@RequestBody NewDocumentRequest request, Authentication authentication) {
+        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+        Long userId = userDetails.getId();
+
 
 
         // Передаем ID пользователя и данные документа в сервис
-        Long documentId = documentService.createDocument(request,authentication);
+        Long documentId = documentService.createDocument(request,userId);
 
         // Возвращаем JSON с ключом "documentId"
         return ResponseEntity.ok(Map.of("documentId", documentId));

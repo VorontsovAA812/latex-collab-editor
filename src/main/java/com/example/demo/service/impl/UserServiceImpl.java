@@ -38,7 +38,7 @@ public class UserServiceImpl implements UserService {
             } else {
                 return null;
             }
-            return new UserDto(user.getUsername(),user.getRole());
+            return new UserDto(user.getUsername(),user.getRole(),user.getIsOnline());
     }
 
 

@@ -6,7 +6,7 @@ import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
 import org.springframework.security.core.Authentication;
 
 public interface DocumentService {
-    Long createDocument(NewDocumentRequest request, Authentication authentication);
+    Long createDocument(NewDocumentRequest request, Long userId);
     void addNewUserToDocument(Long userId, Long documentId);
 
 }

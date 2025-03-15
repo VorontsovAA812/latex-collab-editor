@@ -51,9 +51,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Long createDocument(NewDocumentRequest request, Authentication authentication) {
-        CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-        Long userId = userDetails.getId();
+    public Long createDocument(NewDocumentRequest request, Long userId) {
         User author = userService.findById(userId);
 
         // Создаем новый документ и устанавливаем заголовок и владельца
