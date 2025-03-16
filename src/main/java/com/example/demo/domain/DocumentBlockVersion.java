@@ -1,9 +1,7 @@
 package com.example.demo.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
 import lombok.Getter;
-import lombok.NoArgsConstructor;
 import lombok.Setter;
 import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
@@ -14,22 +12,26 @@ import java.time.Instant;
 @Getter
 @Setter
 @Entity
-@AllArgsConstructor
-@NoArgsConstructor
-@Table(name = "document_versions")
-public class DocumentVersion {
+@Table(name = "document_block_versions", schema = "public")
+public class DocumentBlockVersion {
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "version_id", nullable = false)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "document_block_versions_id_gen")
+    @SequenceGenerator(name = "document_block_versions_id_gen", sequenceName = "document_block_versions_block_version_id_seq", allocationSize = 1)
+    @Column(name = "block_version_id", nullable = false)
+    private Integer id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
-    @JoinColumn(name = "document_id", nullable = false)
-    private Document document;
+    @JoinColumn(name = "block_id", nullable = false)
+    private DocumentBlock block;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
+    @JoinColumn(name = "previous_block_version_id")
+    private DocumentBlockVersion previousBlockVersion;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @OnDelete(action = OnDeleteAction.CASCADE)
+    @OnDelete(action = OnDeleteAction.SET_NULL)
     @JoinColumn(name = "author_user_id", nullable = false)
     private User authorUser;
 
@@ -39,14 +41,5 @@ public class DocumentVersion {
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @OnDelete(action = OnDeleteAction.SET_NULL)
-    @JoinColumn(name = "previous_version_id")
-    private DocumentVersion previousVersion;
-
-    @ColumnDefault("false")
-    @Column(name = "is_published", nullable = false)
-    private Boolean isPublished = false;
 
 }
