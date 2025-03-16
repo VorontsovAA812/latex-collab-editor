@@ -1,9 +1,8 @@
 package com.example.demo.service.impl;
 
-import com.example.demo.domain.Document;
-import com.example.demo.domain.User;
-import com.example.demo.domain.UserDocument;
-import com.example.demo.domain.UserDocumentId;
+import com.example.demo.domain.*;
+import com.example.demo.repos.DocumentBlockRepo;
+import com.example.demo.repos.DocumentBlockVersionRepo;
 import com.example.demo.repos.DocumentRepo;
 import com.example.demo.repos.UserDocumentRepo;
 import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
@@ -24,14 +23,18 @@ import java.util.Optional;
 public class DocumentServiceImpl implements DocumentService {
 
 
+    private final DocumentBlockRepo documentBlockRepo;
     DocumentRepo documentRepo;
     UserService userService;
     UserDocumentRepo userDocumentRepo;
+    DocumentBlockVersionRepo documentBlockVersionRepo;
     @Autowired
-    public DocumentServiceImpl(DocumentRepo documentRepo, UserService userService, UserDocumentRepo userDocumentRepo) {
+    public DocumentServiceImpl(DocumentRepo documentRepo, UserService userService, UserDocumentRepo userDocumentRepo, DocumentBlockRepo documentBlockRepo, DocumentBlockVersionRepo documentBlockVersionRepo) {
         this.documentRepo = documentRepo;
         this.userService = userService;
         this.userDocumentRepo = userDocumentRepo;
+        this.documentBlockRepo = documentBlockRepo;
+        this.documentBlockVersionRepo = documentBlockVersionRepo;
     }
 
 
@@ -61,6 +64,25 @@ public class DocumentServiceImpl implements DocumentService {
 
         // Сохраняем документ, чтобы получить его ID
         Document savedDocument = documentRepo.save(document);
+        DocumentBlock documentBlock = new DocumentBlock();
+        documentBlock.setDocument(savedDocument);
+        documentBlock.setTitle("Основное содержание"); // Можно изменить заголовок
+        documentBlock.setOrderIndex(0); // Первый блок
+        DocumentBlock savedBlock = documentBlockRepo.save(documentBlock);
+
+        DocumentBlockVersion blockVersion = new DocumentBlockVersion();
+        blockVersion.setBlock(savedBlock);
+        blockVersion.setAuthorUser(author);
+        blockVersion.setContent(request.getContent()); // Начальное содержимое из запроса
+        blockVersion.setCreatedAt(Instant.now());  // устанавливаем время регистрации
+
+        documentBlockVersionRepo.save(blockVersion);
+
+
+
+
+
+
 
         // Создаем запись в таблице user_documents для установления связи "пользователь-документ"
         UserDocument userDocument = new UserDocument();
@@ -77,6 +99,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         // Сохраняем связь через репозиторий user_documents
         userDocumentRepo.save(userDocument);
+
 
         return savedDocument.getId();
 
