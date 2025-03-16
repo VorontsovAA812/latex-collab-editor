@@ -68,6 +68,7 @@ public class DocumentServiceImpl implements DocumentService {
         documentBlock.setDocument(savedDocument);
         documentBlock.setTitle("Основное содержание"); // Можно изменить заголовок
         documentBlock.setOrderIndex(0); // Первый блок
+        documentBlock.setCreatedAt((Instant.now()));
         DocumentBlock savedBlock = documentBlockRepo.save(documentBlock);
 
         DocumentBlockVersion blockVersion = new DocumentBlockVersion();
