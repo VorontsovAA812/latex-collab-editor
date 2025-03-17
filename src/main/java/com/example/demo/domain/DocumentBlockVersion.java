@@ -18,7 +18,7 @@ public class DocumentBlockVersion {
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "document_block_versions_id_gen")
     @SequenceGenerator(name = "document_block_versions_id_gen", sequenceName = "document_block_versions_block_version_id_seq", allocationSize = 1)
     @Column(name = "block_version_id", nullable = false)
-    private Integer id;
+    private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
