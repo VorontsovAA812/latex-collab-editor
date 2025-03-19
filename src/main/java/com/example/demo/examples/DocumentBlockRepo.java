@@ -1,11 +1,13 @@
-package com.example.demo.repos;
+/*
+package com.example.demo.examples;
 
-import com.example.demo.domain.DocumentBlock;
 import org.springframework.data.jpa.repository.JpaRepository;
-
+@Deprecated
 public interface DocumentBlockRepo extends JpaRepository<DocumentBlock,Long>
 {
 
 
 
 }
+
+ */

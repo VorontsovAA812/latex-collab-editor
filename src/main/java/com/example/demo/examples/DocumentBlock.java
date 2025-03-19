@@ -1,5 +1,7 @@
-package com.example.demo.domain;
+/*
+package com.example.demo.examples;
 
+import com.example.demo.domain.Document;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,8 +13,8 @@ import java.time.Instant;
 
 @Getter
 @Setter
-@Entity
 @Table(name = "document_blocks", schema = "public")
+@Deprecated
 public class DocumentBlock {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,3 +37,5 @@ public class DocumentBlock {
     private Instant createdAt;
 
 }
+*\
+ */

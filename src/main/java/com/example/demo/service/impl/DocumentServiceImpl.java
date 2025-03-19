@@ -1,40 +1,31 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.domain.*;
-import com.example.demo.repos.DocumentBlockRepo;
-import com.example.demo.repos.DocumentBlockVersionRepo;
+
 import com.example.demo.repos.DocumentRepo;
 import com.example.demo.repos.UserDocumentRepo;
 import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
-import com.example.demo.rest.dto.UserDtos.NewUserRequest;
-import com.example.demo.rest.dto.UserDtos.UserDto;
-import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.DocumentService;
 import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.List;
 import java.util.Optional;
 
 @Service
 public class DocumentServiceImpl implements DocumentService {
 
 
-    private final DocumentBlockRepo documentBlockRepo;
     DocumentRepo documentRepo;
     UserService userService;
     UserDocumentRepo userDocumentRepo;
-    DocumentBlockVersionRepo documentBlockVersionRepo;
     @Autowired
-    public DocumentServiceImpl(DocumentRepo documentRepo, UserService userService, UserDocumentRepo userDocumentRepo, DocumentBlockRepo documentBlockRepo, DocumentBlockVersionRepo documentBlockVersionRepo) {
+    public DocumentServiceImpl(DocumentRepo documentRepo, UserService userService, UserDocumentRepo userDocumentRepo) {
         this.documentRepo = documentRepo;
         this.userService = userService;
         this.userDocumentRepo = userDocumentRepo;
-        this.documentBlockRepo = documentBlockRepo;
-        this.documentBlockVersionRepo = documentBlockVersionRepo;
+
     }
 
 
@@ -64,20 +55,6 @@ public class DocumentServiceImpl implements DocumentService {
 
         // Сохраняем документ, чтобы получить его ID
         Document savedDocument = documentRepo.save(document);
-        DocumentBlock documentBlock = new DocumentBlock();
-        documentBlock.setDocument(savedDocument);
-        documentBlock.setTitle("Основное содержание"); // Можно изменить заголовок
-        documentBlock.setOrderIndex(0); // Первый блок
-        documentBlock.setCreatedAt((Instant.now()));
-        DocumentBlock savedBlock = documentBlockRepo.save(documentBlock);
-
-        DocumentBlockVersion blockVersion = new DocumentBlockVersion();
-        blockVersion.setBlock(savedBlock);
-        blockVersion.setAuthorUser(author);
-        blockVersion.setContent(request.getContent()); // Начальное содержимое из запроса
-        blockVersion.setCreatedAt(Instant.now());  // устанавливаем время регистрации
-
-        documentBlockVersionRepo.save(blockVersion);
 
 
 
