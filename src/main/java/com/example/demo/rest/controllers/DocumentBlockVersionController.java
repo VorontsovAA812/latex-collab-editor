@@ -25,7 +25,7 @@ public class DocumentBlockVersionController {
     }
     @ResponseBody
     @PostMapping("/{blockId}/versions")
-    public ResponseEntity<Long> createNewVersion ((@PathVariable Long blockId, @RequestBody NewVersionRequest request, Authentication authentication )
+    public ResponseEntity<Long> createNewVersion (@PathVariable Long blockId, @RequestBody NewVersionRequest request, Authentication authentication )
     {
 
         Long versionId = service.createNewVersion(request, authentication, blockId);

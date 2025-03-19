@@ -1,11 +1,11 @@
 package com.example.demo.service;
 
 import com.example.demo.rest.dto.DocumentBlockVersionDtos.NewVersionRequest;
-import org.springframework.stereotype.Service;
+import org.springframework.security.core.Authentication;
 
-@Service
+
 public interface DocumentBlockVersionService {
-     Long createNewVersion(NewVersionRequest request, Long userId, Long blockId);
+     Long createNewVersion(NewVersionRequest request, Authentication authentication , Long blockId);
 
 
 
