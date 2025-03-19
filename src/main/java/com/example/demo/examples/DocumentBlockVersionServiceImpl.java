@@ -1,13 +1,10 @@
-package com.example.demo.service.impl;
+/*
+package com.example.demo.examples;
 
 
 import com.example.demo.config.SecurityUtils;
-import com.example.demo.domain.DocumentBlock;
-import com.example.demo.domain.DocumentBlockVersion;
 import com.example.demo.domain.User;
-import com.example.demo.repos.DocumentBlockRepo;
 import com.example.demo.rest.dto.DocumentBlockVersionDtos.NewVersionRequest;
-import com.example.demo.repos.DocumentBlockVersionRepo;
 import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.DocumentBlockVersionService;
 import com.example.demo.service.UserService;
@@ -19,7 +16,7 @@ import org.springframework.stereotype.Service;
 import java.time.Instant;
 import java.util.Optional;
 
-@Service
+@Deprecated
 public class DocumentBlockVersionServiceImpl implements DocumentBlockVersionService {
     DocumentBlockVersionRepo  documentBlockVersionRepo;
 
@@ -80,4 +77,8 @@ public class DocumentBlockVersionServiceImpl implements DocumentBlockVersionServ
 
 
 
+
+
 }
+
+ */

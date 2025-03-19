@@ -1,5 +1,7 @@
-package com.example.demo.domain;
+/*
+package com.example.demo.examples;
 
+import com.example.demo.domain.User;
 import jakarta.persistence.*;
 import lombok.Getter;
 import lombok.Setter;
@@ -11,8 +13,9 @@ import java.time.Instant;
 
 @Getter
 @Setter
-@Entity
 @Table(name = "document_block_versions", schema = "public")
+@Deprecated
+
 public class DocumentBlockVersion {
     @Id
     @GeneratedValue(strategy = GenerationType.SEQUENCE, generator = "document_block_versions_id_gen")
@@ -43,3 +46,5 @@ public class DocumentBlockVersion {
     private Instant createdAt;
 
 }
+
+ */
