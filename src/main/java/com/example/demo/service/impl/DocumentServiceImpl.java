@@ -1,13 +1,18 @@
 package com.example.demo.service.impl;
 
+import com.example.demo.config.SecurityUtils;
 import com.example.demo.domain.*;
 
 import com.example.demo.repos.DocumentRepo;
 import com.example.demo.repos.UserDocumentRepo;
 import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
+import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.DocumentService;
 import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -20,11 +25,14 @@ public class DocumentServiceImpl implements DocumentService {
     DocumentRepo documentRepo;
     UserService userService;
     UserDocumentRepo userDocumentRepo;
+    private  final SecurityUtils securityUtils;
+
     @Autowired
-    public DocumentServiceImpl(DocumentRepo documentRepo, UserService userService, UserDocumentRepo userDocumentRepo) {
+    public DocumentServiceImpl(DocumentRepo documentRepo, UserService userService, UserDocumentRepo userDocumentRepo,SecurityUtils securityUtils) {
         this.documentRepo = documentRepo;
         this.userService = userService;
         this.userDocumentRepo = userDocumentRepo;
+        this.securityUtils = securityUtils;
 
     }
 
@@ -45,8 +53,27 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
     @Override
-    public Long createDocument(NewDocumentRequest request, Long userId) {
+    public Long createDocument(NewDocumentRequest request, Authentication authentication) {
+
+
+        Long userId = null;
+
+        // Сначала проверяем обычную аутентификацию
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            userId = userDetails.getId();
+        }
+        // Если обычной аутентификации нет, пытаемся получить ID из SecurityUtils
+        else {
+            userId = securityUtils.getCurrentUserId();
+        }
+
+
+
+
+
         User author = userService.findById(userId);
+
 
         // Создаем новый документ и устанавливаем заголовок и владельца
         Document document = new Document();

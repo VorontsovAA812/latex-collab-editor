@@ -10,15 +10,8 @@ public class WebController {
     public String home() {
         return "redirect:/documents"; // Перенаправляем на список документов
     }
+
     @GetMapping("/documents")
     public String documents() {
-        return "documents"; // documents.html
-    }
-
-    @GetMapping("/")
-    public String homePage() {
-        return "index"; // Указывает на файл src/main/resources/templates/index.html
-    }
-
-
+        return "redirect:/pages/editor.html";    }
 }
