@@ -5,6 +5,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
@@ -22,6 +23,10 @@ public class Document {
 
     @Column(name = "title", nullable = false, length = 50)
     private String title;
+
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "content", nullable = false)
+    private String content;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)

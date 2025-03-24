@@ -5,6 +5,7 @@ import com.example.demo.domain.*;
 
 import com.example.demo.repos.DocumentRepo;
 import com.example.demo.repos.UserDocumentRepo;
+import com.example.demo.rest.dto.DocumentDtos.DocumentListDTO;
 import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
 import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.DocumentService;
@@ -13,9 +14,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -51,6 +55,33 @@ public class DocumentServiceImpl implements DocumentService {
         // Сохранить обновленного пользователя
         userService.save(user);
     }
+    @Override
+    public List<DocumentListDTO> getDocumentsForCurrentUser(Authentication authentication) {
+
+
+        Long userId = null;
+
+        // Сначала проверяем обычную аутентификацию
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            userId = userDetails.getId();
+        }
+        // Если обычной аутентификации нет, пытаемся получить ID из SecurityUtils
+        else {
+            userId = securityUtils.getCurrentUserId();
+        }
+
+        List<Document> documents =documentRepo.findAllDocumentsByUserId(userId);
+        List<DocumentListDTO> result = new ArrayList<>();
+        for (Document doc : documents) {
+            DocumentListDTO dto = new DocumentListDTO(doc.getTitle(),doc.getId());
+            result.add(dto);
+        }
+
+        return  result;
+
+    }
+
 
     @Override
     public Long createDocument(NewDocumentRequest request, Authentication authentication) {
@@ -79,6 +110,7 @@ public class DocumentServiceImpl implements DocumentService {
         Document document = new Document();
         document.setTitle(request.getTitle());
         document.setOwnerUser(author); // Обязательно устанавливаем владельца!
+        document.setContent(request.getContent());
 
         // Сохраняем документ, чтобы получить его ID
         Document savedDocument = documentRepo.save(document);
