@@ -27,20 +27,20 @@ public class WebSecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        /* http
+        http
                 .authorizeHttpRequests((requests) -> requests
                         .requestMatchers("/register").permitAll()
                         .anyRequest().authenticated()
                 )
                 .formLogin((form) -> form
                         .loginPage("/login")
-                        .defaultSuccessUrl("/", true)
+                        .defaultSuccessUrl("http://localhost:3000/documents", true)
                         .permitAll()
                 )
                 .logout((logout) -> logout.permitAll())
                 .csrf((csrf) -> csrf.disable());
 
-*/
+/*
 
         http
                 // Добавляем тестовый фильтр перед основным фильтром аутентификации
@@ -49,7 +49,7 @@ public class WebSecurityConfig {
                         .anyRequest().permitAll()
                 )
                 .csrf((csrf) -> csrf.disable());
-
+*/
         return http.build();
 
 
