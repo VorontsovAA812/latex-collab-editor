@@ -1,0 +1,10 @@
+version: '3'
+
+services:
+  latex-compiler:
+    image: texlive/texlive:latest-full
+    container_name: latex-compiler
+    volumes:
+      - ./latex-files:/data
+    # Оставляем контейнер запущенным для использования exec
+    command: tail -f /dev/null

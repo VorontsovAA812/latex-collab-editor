@@ -39,8 +39,8 @@ public class WebSecurityConfig {
                 )
                 .logout((logout) -> logout.permitAll())
                 .csrf((csrf) -> csrf.disable());
-
 /*
+
 
         http
                 // Добавляем тестовый фильтр перед основным фильтром аутентификации
@@ -50,6 +50,7 @@ public class WebSecurityConfig {
                 )
                 .csrf((csrf) -> csrf.disable());
 */
+
         return http.build();
 
 

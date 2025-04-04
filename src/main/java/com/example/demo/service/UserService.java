@@ -12,4 +12,5 @@ public interface UserService {
     void deleteById(Long id);
     UserDto findByUsername(String username);
     void save(User author);
+
 }

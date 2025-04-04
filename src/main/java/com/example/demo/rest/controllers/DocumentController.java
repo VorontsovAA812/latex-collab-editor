@@ -1,12 +1,10 @@
 package com.example.demo.rest.controllers;
 
 import com.example.demo.config.SecurityUtils;
-import com.example.demo.domain.Document;
+import com.example.demo.rest.dto.DocumentDtos.ContentRequestDto;
 import com.example.demo.rest.dto.DocumentDtos.DocumentListDTO;
+import com.example.demo.rest.dto.DocumentDtos.DocumentResponse;
 import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
-import com.example.demo.rest.dto.UserDtos.NewUserRequest;
-import com.example.demo.rest.dto.UserDtos.UserDto;
-import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.DocumentService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -15,12 +13,11 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 @Controller
-@RequestMapping("/api/v1/document")
+@RequestMapping("/api/v1/documents")
 public class DocumentController {
     private final DocumentService documentService;
     private  final  SecurityUtils securityUtils;
@@ -30,8 +27,19 @@ public class DocumentController {
         this.securityUtils = securityUtils;
     }
 
+    @GetMapping("/{id}")
+    public ResponseEntity<DocumentResponse> findById(@PathVariable Long id) {
+        return  ResponseEntity.ok(documentService.findById(id));
+    }
 
-    @PostMapping("/create")
+    @PatchMapping("/{id}")
+    public ResponseEntity<DocumentResponse> updateDocument(@PathVariable Long id, @RequestBody NewDocumentRequest updateDocumentRequest) {
+
+        return  ResponseEntity.ok(documentService.updateDocument(id,updateDocumentRequest));
+    }
+
+
+    @PostMapping("")
     public ResponseEntity<Map<String, Long>> createDocument(@RequestBody NewDocumentRequest request, Authentication authentication) {
 
         // Передаем ID пользователя и данные документа в сервис
@@ -40,6 +48,7 @@ public class DocumentController {
         // Возвращаем JSON с ключом "documentId"
         return ResponseEntity.ok(Map.of("documentId", documentId));
     }
+
 
     @GetMapping("/documentList")
     public ResponseEntity<List<DocumentListDTO>> getDocumentsForCurrentUser(Authentication authentication) {

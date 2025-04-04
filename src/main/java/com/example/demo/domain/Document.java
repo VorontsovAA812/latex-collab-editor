@@ -9,6 +9,8 @@ import org.hibernate.annotations.ColumnDefault;
 import org.hibernate.annotations.OnDelete;
 import org.hibernate.annotations.OnDeleteAction;
 
+import java.time.Instant;
+
 @Getter
 @Setter
 @Entity
@@ -24,9 +26,20 @@ public class Document {
     @Column(name = "title", nullable = false, length = 50)
     private String title;
 
+    @Column(
+            name = "content",
+            nullable = false,
+            columnDefinition = "TEXT NOT NULL DEFAULT ''"
+    )
+    private String content = ""; // Инициализация для безопасности
+
     @ColumnDefault("CURRENT_TIMESTAMP")
-    @Column(name = "content", nullable = false)
-    private String content;
+    @Column(name = "created_at", nullable = false)
+    private Instant createdAt;
+
+    @ColumnDefault("CURRENT_TIMESTAMP")
+    @Column(name = "last_modified_at", nullable = false)
+    private Instant updatedAt;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @OnDelete(action = OnDeleteAction.CASCADE)
