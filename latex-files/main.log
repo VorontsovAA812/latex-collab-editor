@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.30)  14 APR 2025 19:52
+This is pdfTeX, Version 3.141592653-2.6-1.40.27 (TeX Live 2025) (preloaded format=pdflatex 2025.3.30)  16 APR 2025 19:26
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -431,7 +431,10 @@ File: l3backend-pdftex.def 2024-05-08 L3 backend support: PDF output (pdfTeX)
 \l__color_backend_stack_int=\count288
 \l__pdf_internal_box=\box57
 )
-No file main.aux.
+(/data/main.aux
+Package babel Info: 'russian' activates 'russian' shorthands.
+(babel)             Reported  on input line 5.
+)
 \openout1 = `main.aux'.
 
 LaTeX Font Info:    Checking defaults for OML/cmm/m/it on input line 29.
@@ -450,9 +453,8 @@ LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 29.
 LaTeX Font Info:    ... okay on input line 29.
 LaTeX Font Info:    Checking defaults for T2A/cmr/m/n on input line 29.
 LaTeX Font Info:    ... okay on input line 29.
-Package babel Info: 'russian' activates 'russian' shorthands.
-(babel)             Reported  on input line 29.
 LaTeX Info: Redefining \th on input line 29.
+
 (/usr/local/texlive/2025/texmf-dist/tex/context/base/mkii/supp-pdf.mkii
 [Loading MPS to PDF converter (version 2006.09.02).]
 \scratchcounter=\count289
@@ -551,10 +553,10 @@ L3 programming layer <2025-01-18>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 5803 strings out of 473190
- 89573 string characters out of 5715806
- 497416 words of memory out of 5000000
- 28983 multiletter control sequences out of 15000+600000
+ 5806 strings out of 473190
+ 89622 string characters out of 5715806
+ 497407 words of memory out of 5000000
+ 28984 multiletter control sequences out of 15000+600000
  572603 words of font info for 73 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
  57i,10n,65p,491b,309s stack positions out of 10000i,1000n,20000p,200000b,200000s
