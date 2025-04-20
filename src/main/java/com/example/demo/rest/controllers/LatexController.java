@@ -8,6 +8,8 @@ import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.http.*;
+
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -48,11 +50,11 @@ public class LatexController {
         String containerPath = "/data/" + documentId;
         String texFile = "/data/" + documentId + "/"+ filenameTex;
         String compileCommand = String.format(
-                "docker exec %s pdflatex -interaction=nonstopmode -output-directory=%s %s",
+                "docker exec %s pdflatex -output-directory=%s %s",
                 CONTAINER_NAME, containerPath, texFile
         );
 
-
+        // РЕЖИМ НОНСТОП НАДО ЛИ ИЛИ НЕТ?
 
         // Запуск процесса компиляции
         Process process = Runtime.getRuntime().exec(compileCommand);
@@ -63,7 +65,7 @@ public class LatexController {
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDisposition(ContentDisposition
                 .builder("inline")
-                .filename(filenamePdf).build());
+                .filename(filenamePdf, StandardCharsets.UTF_8).build());
 
 
         return ResponseEntity.ok()
