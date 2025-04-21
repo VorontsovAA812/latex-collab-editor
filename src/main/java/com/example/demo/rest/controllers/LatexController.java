@@ -1,5 +1,8 @@
 package com.example.demo.rest.controllers;
 
+import com.example.demo.exception.LatexCompilationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
 
@@ -9,6 +12,8 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.http.*;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -17,7 +22,7 @@ import java.nio.file.Paths;
 @RestController
 @RequestMapping("/api/v1/documents")
 public class LatexController {
-
+    private static final Logger logger = LoggerFactory.getLogger(LatexController.class); // Добавляем логгер
     private final String LATEX_FILES_DIR = "./latex-files";
     private final String CONTAINER_NAME = "latex-compiler";
 
@@ -50,15 +55,42 @@ public class LatexController {
         String containerPath = "/data/" + documentId;
         String texFile = "/data/" + documentId + "/"+ filenameTex;
         String compileCommand = String.format(
-                "docker exec %s pdflatex -output-directory=%s %s",
+                "docker exec %s pdflatex -interaction=nonstopmode -output-directory=%s %s",
                 CONTAINER_NAME, containerPath, texFile
         );
 
         // РЕЖИМ НОНСТОП НАДО ЛИ ИЛИ НЕТ?
 
-        // Запуск процесса компиляции
         Process process = Runtime.getRuntime().exec(compileCommand);
-        process.waitFor();
+        StringBuilder output = new StringBuilder();
+
+        try (
+                BufferedReader stdoutReader = new BufferedReader(new InputStreamReader(process.getInputStream()));
+                BufferedReader stderrReader = new BufferedReader(new InputStreamReader(process.getErrorStream()))
+        ) {
+            // Чтение стандартного вывода
+            String line;
+            while ((line = stdoutReader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+
+            // Чтение вывода ошибок
+            while ((line = stderrReader.readLine()) != null) {
+                output.append(line).append("\n");
+            }
+        }
+
+        int exitCode = process.waitFor();
+
+        if (exitCode != 0 || !Files.exists(pdfFilePath)) {
+            String errorMessage = "Ошибка компиляции. Вывод:\n" + output.toString();
+            logger.error(errorMessage); // Запись в лог
+            System.err.println(errorMessage); // Вывод в консоль
+            throw new LatexCompilationException(
+                    "Ошибка компиляции LaTeX документа",
+                    output.toString()
+            );
+        }
 
         HttpHeaders headers = new HttpHeaders(); // создаем MULTYMAP для заголовков
 

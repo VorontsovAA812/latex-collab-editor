@@ -1,6 +1,7 @@
 package com.example.demo.rest.controllers;
 
 import com.example.demo.domain.User;
+
 import com.example.demo.rest.dto.UserDtos.NewUserRequest;
 import com.example.demo.rest.dto.UserDtos.UserDto;
 import com.example.demo.security.CustomUserDetails;
@@ -27,8 +28,12 @@ public class UserController {
     @ResponseBody
     @GetMapping("/{id}")
     public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        return  ResponseEntity.ok(userService.findById(id));
+        User user = userService.findById(id);
+        return ResponseEntity.ok(user);
     }
+
+
+
     @ResponseBody
     @PostMapping
     public ResponseEntity<Long> add(@RequestBody NewUserRequest request) //
@@ -39,21 +44,17 @@ public class UserController {
     }
 
     @ResponseBody
-    @GetMapping("/username/{username}")
+    @GetMapping("/by-username/{username}")
     public ResponseEntity<UserDto> findByUsername(@PathVariable String username)
     {
         UserDto userDto = userService.findByUsername(username);
-        if (userDto == null) {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
-        }
-
-
         return ResponseEntity.ok(userDto);
 
     }
 
 
-    @DeleteMapping("/id/{id}")
+
+    @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteById(@PathVariable Long id)
     {
         userService.deleteById(id);

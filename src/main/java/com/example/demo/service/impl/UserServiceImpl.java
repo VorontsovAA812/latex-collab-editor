@@ -1,6 +1,8 @@
 package com.example.demo.service.impl;
 
 import com.example.demo.domain.User;
+import com.example.demo.exception.UserNotFoundException;
+import com.example.demo.exception.UserNotFoundExceptionByName;
 import com.example.demo.repos.UserRepo;
 import com.example.demo.rest.dto.UserDtos.NewUserRequest;
 import com.example.demo.rest.dto.UserDtos.UserDto;
@@ -23,21 +25,23 @@ public class UserServiceImpl implements UserService {
     @Override
     public User findById(Long id) {
         Optional<User> element = userRepo.findById(id);
-        User usr = element.get();
-        return usr;
+            if (element.isEmpty())
+        {
+            throw new UserNotFoundException("Пользователь с таким id не существует");
+        }
+
+        return element.get();
     }
 
 
 
         @Override
         public UserDto findByUsername(String username) {
-            User user;
-            Optional<User> optionalUser = userRepo.findByUsername(username);
-            if (optionalUser.isPresent()) {
-                user = optionalUser.get();
-            } else {
-                return null;
+            Optional<User> element = userRepo.findByUsername(username);
+            if (element.isEmpty()) {
+                throw new UserNotFoundExceptionByName("Пользователь с таким именем не существует");
             }
+             User user= element.get();
             return new UserDto(user.getUsername(),user.getRole(),user.getIsOnline());
     }
 

@@ -1,0 +1,2 @@
+ALTER TABLE documents
+    ALTER COLUMN content TYPE TEXT;

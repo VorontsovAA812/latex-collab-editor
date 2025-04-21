@@ -28,8 +28,8 @@ public class Document {
 
     @Column(
             name = "content",
-            nullable = false,
-            columnDefinition = "TEXT NOT NULL DEFAULT ''"
+
+            columnDefinition = "TEXT"
     )
     private String content = ""; // Инициализация для безопасности
 
