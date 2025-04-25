@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.http.*;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -27,7 +28,7 @@ public class LatexController {
     private final String CONTAINER_NAME = "latex-compiler";
 
     @PostMapping("/compile")
-    public ResponseEntity<Resource> compileLaTeX(@RequestBody LatexCompileRequest request) throws Exception {
+    public ResponseEntity<Resource> compileLaTeX(@RequestBody LatexCompileRequest request) throws IOException, InterruptedException,LatexCompilationException  {
 
         String documentId = Long.toString(request.getId());
         // Используем абсолютный путь вместо относительного
