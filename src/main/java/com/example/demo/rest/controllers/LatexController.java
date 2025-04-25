@@ -48,7 +48,7 @@ public class LatexController {
         Path pdfFilePath = Paths.get(workDir, filenamePdf); // создаем путь  ./latex-files/documentId/title.tex
 
         Files.writeString(texFilePath, latexSource); //создает файл tex и записыванет в него строку latexSourse
-
+        // подумать над путями!!!
 
         // Команда для компиляции через Docker
 

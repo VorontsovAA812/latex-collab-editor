@@ -9,6 +9,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import java.io.IOException;
+
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
@@ -25,5 +27,30 @@ public class GlobalExceptionHandler {
         error.setDetails(ex.getCompilerOutput()); // Добавляем вывод компилятора
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
+    @ExceptionHandler(IOException.class)
+    public ResponseEntity<ApiError> handleIOException(IOException ex) {
+        ApiError error = new ApiError();
+        error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        error.setMessage("Ошибка работы с файловой системой");
+        error.setDetails(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
 
+    @ExceptionHandler(InterruptedException.class)
+    public ResponseEntity<ApiError> handleInterruptedException(InterruptedException ex) {
+        ApiError error = new ApiError();
+        error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        error.setMessage("Процесс был прерван");
+        error.setDetails(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleAllExceptions(Exception ex) {
+        ApiError error = new ApiError();
+        error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        error.setMessage("Неизвестная ошибка");
+        error.setDetails(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
 }
