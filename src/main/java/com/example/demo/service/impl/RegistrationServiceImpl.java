@@ -9,6 +9,7 @@ import com.example.demo.service.RegistrationService;
 import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -34,6 +35,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         return  user;
     }
 
+    @Transactional
     @Override
     public RegistrationResult registerUser(String username, String password)
     {
@@ -47,7 +49,7 @@ public class RegistrationServiceImpl implements RegistrationService {
         newUser.setPassword(password); // Рекомендуется хранить пароль в зашифрованном виде
         newUser.setCreatedAt(Instant.now());  // устанавливаем время регистрации
 
-        userRepo.saveAndFlush(newUser);
+        userRepo.save(newUser);
 
         return new RegistrationResult(true, "Пользователь успешно зарегистрирован!");
     }

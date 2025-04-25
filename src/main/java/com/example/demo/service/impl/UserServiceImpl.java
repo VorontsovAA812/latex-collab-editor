@@ -9,6 +9,7 @@ import com.example.demo.rest.dto.UserDtos.UserDto;
 import com.example.demo.service.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Optional;
 @Service
@@ -48,6 +49,7 @@ public class UserServiceImpl implements UserService {
 
 
 
+    @Transactional
     @Override
     public Long addNewUser(NewUserRequest request) {
         System.out.println("Добавляем нового пользователя: " + request);
@@ -60,6 +62,7 @@ public class UserServiceImpl implements UserService {
 
 
     }
+    @Transactional
     @Override
     public void  deleteById(Long id) {
         userRepo.deleteById(id);

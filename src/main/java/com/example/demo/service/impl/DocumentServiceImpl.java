@@ -16,6 +16,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.print.Doc;
@@ -55,6 +56,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
 
+    @Transactional
     @Override
     public void addNewUserToDocument(Long userId, Long documentId) {
         // Найти документ по ID
@@ -69,6 +71,8 @@ public class DocumentServiceImpl implements DocumentService {
         // Сохранить обновленного пользователя
         userService.save(user);
     }
+
+    @Transactional(readOnly = true)
     @Override
     public DocumentResponse findById(Long id) {
 
@@ -89,6 +93,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
 
+    @Transactional(readOnly = true)
     @Override
     public List<DocumentListDTO> getDocumentsForCurrentUser(Authentication authentication) {
 
@@ -117,6 +122,7 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
 
+    @Transactional
     @Override
     public Long createDocument(NewDocumentRequest request, Authentication authentication) {
 
@@ -180,6 +186,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     }
 
+    @Transactional
     @Override
     public DocumentResponse updateDocument(Long id, NewDocumentRequest updateDocumentRequest)
     {
