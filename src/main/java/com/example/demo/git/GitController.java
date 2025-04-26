@@ -50,4 +50,20 @@ public class GitController {
         }
     }
 
+    @PostMapping("/{documentId}/restore")
+    public ResponseEntity<String> restoreDocumentToCommit(
+            @PathVariable Long documentId,
+            @RequestParam String commitId,
+            @RequestParam String username) {
+        try {
+            gitService.restoreToCommit(documentId, commitId, username);
+            return ResponseEntity.ok("Документ успешно откатан к версии " + commitId);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Неизвестная ошибка при откате: " + e.getMessage());
+        }
+    }
+
+
+
 }
