@@ -1,15 +1,18 @@
-package com.example.demo.service.impl;
+package com.example.demo.git;
 
 
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.revwalk.RevCommit;
 import org.springframework.stereotype.Service;
 import org.eclipse.jgit.api.Git;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.Instant;
+import java.util.ArrayList;
+import java.util.List;
 
 
 @Service
@@ -43,7 +46,7 @@ public class GitServiceImpl {
 
     }
 
-    // метод который коммитит
+    // метод который коммитит// зачем тогда в бд хранить контент
     public void saveAndCommit( String texContent, Long documentId,String authorName) throws GitAPIException,IOException
     {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();; // /latex-versions/documentId
@@ -58,4 +61,40 @@ public class GitServiceImpl {
                 .call();
 
     }
+
+    public List<CommitInfo> getHistory(Long documentId)throws IOException, GitAPIException
+    {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();; // /latex-versions/documentId
+
+        Git git = Git.open(repoPath.toFile());
+        Iterable<RevCommit> infoAboutAllCommits = git.log().call();
+
+        List<CommitInfo> commits = new ArrayList<>(); // дописать!!!!!
+
+        for (RevCommit commit : infoAboutAllCommits)
+        {
+            commits.add(
+                    new CommitInfo(commit.getName(),
+                            commit.getShortMessage(),
+                            commit.getAuthorIdent().getName(),
+                            Instant.ofEpochSecond(commit.getCommitTime())
+
+
+                    ));
+
+        }
+        return commits;
+
+
+
+
+
+
+
+    };
+
+
+
+
+
 }

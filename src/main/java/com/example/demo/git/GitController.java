@@ -1,14 +1,15 @@
-package com.example.demo.rest.controllers;
+package com.example.demo.git;
 
 
 
-import com.example.demo.service.impl.GitServiceImpl;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/git")
@@ -36,6 +37,16 @@ public class GitController {
         } catch (GitAPIException | IOException e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("Error during save and commit: " + e.getMessage());
+        }
+    }
+
+    @GetMapping("/history/{documentId}")
+    public ResponseEntity<List<CommitInfo>> getCommitHistory(@PathVariable Long documentId) {
+        try {
+            List<CommitInfo> history = gitService.getHistory(documentId);
+            return ResponseEntity.ok(history);
+        } catch (IOException | GitAPIException e) {
+            return ResponseEntity.internalServerError().build();
         }
     }
 
