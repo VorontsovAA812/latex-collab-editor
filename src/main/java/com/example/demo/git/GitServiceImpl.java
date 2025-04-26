@@ -17,7 +17,7 @@ public class GitServiceImpl {
 
     private final String sourcePath = "./latex-versions";  // здесь git, main.tex
 
-
+// создаение и иницализирование репоитория под нужный документ
     public Git initRepo(Long documentId) throws GitAPIException,IOException {
 
 
@@ -41,11 +41,21 @@ public class GitServiceImpl {
 
         return git;
 
+    }
 
+    // метод который коммитит
+    public void saveAndCommit( String texContent, Long documentId,String authorName) throws GitAPIException,IOException
+    {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();; // /latex-versions/documentId
+        Path textile=repoPath.resolve("main.tex");
+        Files.writeString(textile,texContent);
+        Git git = Git.open(repoPath.toFile());
+        git.add().addFilepattern("main.tex").call();
 
-
-
-
+        git.commit()
+                .setMessage("Document updated")
+                .setAuthor(authorName, authorName + "@editor.local")  // любой email для Git
+                .call();
 
     }
 }
