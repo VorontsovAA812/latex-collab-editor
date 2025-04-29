@@ -30,7 +30,7 @@ public class GitController {
     }
 
     @PostMapping("/commit")
-    public ResponseEntity<String> saveAndCommit(@RequestBody LatexCommitRequest request) {
+    public ResponseEntity<String> commitDocument(@RequestBody LatexCommitRequest request) {
         try {
             gitService.saveAndCommit(request.getTexContent(), request.getDocumentId(), request.getAuthorName());
             return ResponseEntity.ok("Document saved and committed successfully.");
@@ -50,6 +50,10 @@ public class GitController {
         }
     }
 
+
+
+
+
     @PostMapping("/{documentId}/restore")
     public ResponseEntity<String> restoreDocumentToCommit(
             @PathVariable Long documentId,
@@ -66,4 +70,20 @@ public class GitController {
 
 
 
+
+
+@PostMapping("/{documentId}/restore")
+public ResponseEntity<String> restoreDocumentToCommit(
+        @RequestBody  restoreToCommitRequest request) {
+    try {
+        gitService.restoreToCommit(request.documentId, request.commitId, request.username);
+        return ResponseEntity.ok("Документ успешно откатан к версии " + request.commitId);
+    } catch (Exception e) {
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Неизвестная ошибка при откате: " + e.getMessage());
+    }
 }
+
+
+
+    }
