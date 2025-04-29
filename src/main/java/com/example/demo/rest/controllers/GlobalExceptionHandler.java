@@ -4,6 +4,7 @@ import com.example.demo.exception.ApiError;
 import com.example.demo.exception.LatexCompilationException;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.exception.UserNotFoundExceptionByName;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -45,6 +46,16 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
 
+    @ExceptionHandler(GitAPIException.class)
+    public ResponseEntity<ApiError> handleGitAPIException(GitAPIException ex) {
+        ApiError error = new ApiError();
+        error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
+        error.setMessage("Ошибка Git-репозитория");
+        error.setDetails(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
+    }
+
+
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ApiError> handleAllExceptions(Exception ex) {
         ApiError error = new ApiError();
@@ -53,4 +64,5 @@ public class GlobalExceptionHandler {
         error.setDetails(ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
+
 }

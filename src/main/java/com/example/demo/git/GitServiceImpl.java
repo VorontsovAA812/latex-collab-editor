@@ -59,7 +59,7 @@ public class GitServiceImpl {
     }
 
     // метод который коммитит// зачем тогда в бд хранить контент
-    public void saveAndCommit(String texContent, Long documentId, String authorName) throws GitAPIException, IOException {
+    public void commitDocument(String texContent, Long documentId, String authorName) throws GitAPIException, IOException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         ; // /latex-versions/documentId
         Path textile = repoPath.resolve("main.tex");
@@ -73,6 +73,7 @@ public class GitServiceImpl {
                     .call();
 
         }
+
 
     }
 
