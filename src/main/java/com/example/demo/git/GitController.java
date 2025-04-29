@@ -42,31 +42,24 @@ public class GitController {
     }
 
     @GetMapping("/history/{documentId}")
-    public ResponseEntity<List<CommitInfo>> getCommitHistory(@PathVariable Long documentId) {
-        try {
-            List<CommitInfo> history = gitService.getHistory(documentId);
+    public ResponseEntity<List<CommitInfo>> getCommitHistory(@PathVariable Long documentId) throws IOException, GitAPIException{
+
+            List<CommitInfo> history = gitService.getCommitHistory(documentId);
             return ResponseEntity.ok(history);
-        } catch (IOException | GitAPIException e) {
-            return ResponseEntity.internalServerError().build();
-        }
+
     }
 
 
 
-
-
     @PostMapping("/{documentId}/restore")
-    public ResponseEntity<String> restoreDocumentToCommit(
-            @PathVariable Long documentId,
-            @RequestParam String commitId,
-            @RequestParam String username) {
-        try {
-            gitService.restoreToCommit(documentId, commitId, username);
-            return ResponseEntity.ok("Документ успешно откатан к версии " + commitId);
-        } catch (Exception e) {
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body("Неизвестная ошибка при откате: " + e.getMessage());
-        }
+    public ResponseEntity<GitResponse> restoreDocumentToCommit(@PathVariable Long documentId,@RequestBody RestoreToCommitRequest request) throws IOException, GitAPIException {
+
+            gitService.restoreToCommit(documentId, request.getCommitId(), request.getUsername());
+
+       return ResponseEntity.ok(GitResponse.builder()
+                .message("Документ успешно откатан к версии " + request.getCommitId())
+                .documentId(documentId).build());
+
     }
 
 

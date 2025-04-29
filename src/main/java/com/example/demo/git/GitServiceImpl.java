@@ -77,7 +77,7 @@ public class GitServiceImpl {
 
     }
 
-    public List<CommitInfo> getHistory(Long documentId) throws IOException, GitAPIException {
+    public List<CommitInfo> getCommitHistory(Long documentId) throws IOException, GitAPIException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         ; // /latex-versions/documentId
 

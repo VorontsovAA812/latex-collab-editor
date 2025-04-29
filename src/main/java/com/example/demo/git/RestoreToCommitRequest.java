@@ -1,13 +1,17 @@
 package com.example.demo.git;
 
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestParam;
+
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+public class RestoreToCommitRequest {
 
 
-public class restoreToCommitRequest {
+   private String commitId;
+    private String username;
 
-
-    Long documentId;
-    String commitId;
-    String username;
 }
