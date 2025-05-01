@@ -10,15 +10,16 @@ import com.example.demo.rest.dto.DocumentDtos.LatexCompileRequest;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 
-import org.springframework.http.*;
 
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 
 @RestController
 @RequestMapping("/api/v1/documents")
@@ -27,10 +28,39 @@ public class LatexController {
     private final String LATEX_FILES_DIR = "./latex-files";
     private final String CONTAINER_NAME = "latex-compiler";
 
+
+    public void copyForCompilation(Long documentId) throws IOException {
+        String sourcePath = "./latex-versions";  // здесь git, main.tex
+
+        String sourcePath2 = "./latex-files";  // здесь git, main.tex
+
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        Path repoPath2 = Paths.get(sourcePath2, documentId.toString()).toAbsolutePath().normalize();
+
+        Path textile= repoPath.resolve("main.tex");
+
+        if (!Files.exists(textile)) {
+            throw new FileNotFoundException("main.tex не найден по пути: " + textile);
+        }
+
+        Files.createDirectories(repoPath2); // вдруг нет папки
+        Path textile2 = repoPath2.resolve("main.tex");
+
+        Files.copy(textile, textile2, StandardCopyOption.REPLACE_EXISTING);
+
+
+    }
+
     @PostMapping("/compile")
     public ResponseEntity<Resource> compileLaTeX(@RequestBody LatexCompileRequest request) throws IOException, InterruptedException,LatexCompilationException  {
 
         String documentId = Long.toString(request.getId());
+
+        copyForCompilation(request.getId());
+
+
+
+
         // Используем абсолютный путь вместо относительного
         Path workDirPath = Paths.get(LATEX_FILES_DIR, documentId).toAbsolutePath().normalize();
         String workDir = workDirPath.toString();

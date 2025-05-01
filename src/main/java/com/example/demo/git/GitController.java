@@ -2,10 +2,8 @@ package com.example.demo.git;
 
 
 
-import com.example.demo.rest.dto.DocumentDtos.DocumentResponse;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
@@ -34,14 +32,16 @@ public class GitController {
     @PostMapping("/commit")
     public ResponseEntity<GitResponse> commitDocument(@RequestBody LatexCommitRequest request) throws GitAPIException, IOException {
 
-            gitService.commitDocument(request.getTexContent(), request.getDocumentId(), request.getAuthorName());
+            CommitInfo commitInfo = gitService.commitDocument(request.getTexContent(), request.getDocumentId(), request.getAuthorName());
             return ResponseEntity.ok(GitResponse.builder()
                     .message("Document saved and committed successfully.")
-                    .documentId(request.getDocumentId()).build());
+                    .documentId(request.getDocumentId())
+                    .commitId("Идентификатор версии :"+commitInfo.getId())
+                    .build());
 
     }
 
-    @GetMapping("/history/{documentId}")
+    @GetMapping("/{documentId}/commits")
     public ResponseEntity<List<CommitInfo>> getCommitHistory(@PathVariable Long documentId) throws IOException, GitAPIException{
 
             List<CommitInfo> history = gitService.getCommitHistory(documentId);
@@ -51,16 +51,23 @@ public class GitController {
 
 
 
+
+
+
+
     @PostMapping("/{documentId}/restore")
     public ResponseEntity<GitResponse> restoreDocumentToCommit(@PathVariable Long documentId,@RequestBody RestoreToCommitRequest request) throws IOException, GitAPIException {
 
-            gitService.restoreToCommit(documentId, request.getCommitId(), request.getUsername());
+        CommitInfo commitInfo =  gitService.restoreToCommit(documentId, request.getCommitId(), request.getUsername());
 
        return ResponseEntity.ok(GitResponse.builder()
                 .message("Документ успешно откатан к версии " + request.getCommitId())
-                .documentId(documentId).build());
+                .documentId(documentId)
+               .commitId("Новая версия (текущая):"+commitInfo.getId()).build());
 
     }
+
+
 
 
 

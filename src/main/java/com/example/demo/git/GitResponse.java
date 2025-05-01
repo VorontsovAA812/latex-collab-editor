@@ -11,4 +11,6 @@ public class GitResponse {
 
     private String message;
     private Long documentId;
+    private String commitId;
+
 }
