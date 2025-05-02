@@ -17,7 +17,7 @@ public class GitController {
 
     private final GitServiceImpl gitService;
 
-    @PostMapping("/init/{documentId}")
+    @PostMapping("/{documentId}/init")
     public ResponseEntity<GitResponse> initRepo(@PathVariable Long documentId) throws GitAPIException, IOException {
 
 
@@ -55,6 +55,7 @@ public class GitController {
 
 
 
+
     @PostMapping("/{documentId}/restore")
     public ResponseEntity<GitResponse> restoreDocumentToCommit(@PathVariable Long documentId,@RequestBody RestoreToCommitRequest request) throws IOException, GitAPIException {
 
@@ -71,9 +72,25 @@ public class GitController {
 
 
 
+    @PostMapping("/{documentId}/restore/previous")
+    public ResponseEntity<GitResponse> restoreToPreviousCommit(@PathVariable Long documentId) throws IOException, GitAPIException {
 
+        CommitInfo commitInfo =  gitService.restoreToPreviousCommit(documentId);
 
-
-
-
+        return ResponseEntity.ok(GitResponse.builder()
+                .message("Документ успешно откатан к версии " + commitInfo.getId())
+                .documentId(documentId).build());
     }
+
+
+
+
+
+
+
+
+
+
+
+
+}

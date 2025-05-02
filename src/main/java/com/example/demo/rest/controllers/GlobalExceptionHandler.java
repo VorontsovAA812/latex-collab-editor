@@ -4,6 +4,7 @@ import com.example.demo.exception.ApiError;
 import com.example.demo.exception.LatexCompilationException;
 import com.example.demo.exception.UserNotFoundException;
 import com.example.demo.exception.UserNotFoundExceptionByName;
+import com.example.demo.git.NoPreviousCommitException;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,13 @@ public class GlobalExceptionHandler {
         error.setStatus(HttpStatus.BAD_REQUEST);
         error.setMessage(ex.getMessage());
         error.setDetails(ex.getCompilerOutput()); // Добавляем вывод компилятора
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+    @ExceptionHandler(NoPreviousCommitException.class)
+    public ResponseEntity<ApiError> handleLatexError(NoPreviousCommitException ex) {
+        ApiError error = new ApiError();
+        error.setStatus(HttpStatus.BAD_REQUEST);
+        error.setMessage(ex.getMessage());
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
     @ExceptionHandler(IOException.class)
@@ -56,13 +64,18 @@ public class GlobalExceptionHandler {
     }
 
 
+
+
+
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleAllExceptions(Exception ex) {
+    public ResponseEntity<ApiError> handleGeneralError(Exception ex) {
+        ex.printStackTrace(); // ← временно
         ApiError error = new ApiError();
         error.setStatus(HttpStatus.INTERNAL_SERVER_ERROR);
         error.setMessage("Неизвестная ошибка");
         error.setDetails(ex.getMessage());
         return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(error);
     }
+
 
 }

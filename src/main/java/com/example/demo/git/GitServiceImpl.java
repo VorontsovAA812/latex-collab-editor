@@ -100,35 +100,29 @@ public class GitServiceImpl {
 
     public List<CommitInfo> getCommitHistory(Long documentId) throws IOException, GitAPIException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
-        ; // /latex-versions/documentId
-        List<CommitInfo> commits = new ArrayList<>(); // дописать!!!!!
-        try
-                (Git git = Git.open(repoPath.toFile())) {
-            Iterable<RevCommit> infoAboutAllCommits = git.log().call();
+        List<CommitInfo> commits = new ArrayList<>();
 
-
-            for (RevCommit commit : infoAboutAllCommits) {
-                commits.add(
-                        new CommitInfo(commit.getName(),
-                                commit.getShortMessage(),
-                                commit.getAuthorIdent().getName(),
-                                Instant.ofEpochSecond(commit.getCommitTime())
-
-
-                        ));
+        try (Git git = Git.open(repoPath.toFile())) {
+            try (RevWalk revWalk = new RevWalk(git.getRepository())) {
+                for (RevCommit commit : git.log().call()) {
+                    revWalk.parseBody(commit); //
+                    commits.add(convertCommitToInfo(commit));
+                }
             }
         }
         return commits;
-
     }
+
     public RevCommit getCurrentCommit(Long documentId) throws IOException, GitAPIException {
         File repoDir = new File(sourcePath, documentId.toString()); //  открываем директорию документа
         try (Git git = Git.open(repoDir)) {
             Repository repository = git.getRepository(); // возвращаем объект для путешенствия по коммитам и деревьям
             ObjectId headId = repository.resolve("HEAD");
             try (RevWalk revWalk = new RevWalk(git.getRepository())) {
+                RevCommit commit = revWalk.parseCommit(headId);
+                revWalk.parseBody(commit);
 
-                return revWalk.parseCommit(headId);
+                return commit;
             }
         }
     }
@@ -137,29 +131,34 @@ public class GitServiceImpl {
 
     public  CommitInfo getPreviousCommit(Long documentId) throws GitAPIException, IOException {
 
-        RevCommit previousCommit;
 
         RevCommit currentCommit =  getCurrentCommit(documentId);
-        if ( currentCommit.getParentCount()== 0){
-            previousCommit =  currentCommit;
-        }
-        else{
 
-           previousCommit = currentCommit.getParent(0);
 
+        if (currentCommit.getParentCount() == 0) {
+            throw new NoPreviousCommitException("Документ нельзя откатить — это первая версия");
         }
 
 
+
+        RevCommit previousCommit;
+        try (Git git = Git.open(new File(sourcePath, documentId.toString()));
+             RevWalk revWalk = new RevWalk(git.getRepository())) {
+
+            previousCommit = revWalk.parseCommit(currentCommit.getParent(0));
+            revWalk.parseBody(previousCommit); //
+
+        }
         return convertCommitToInfo(previousCommit);
 
 
         }
 
-    public CommitInfo restoreToPreviousCommit(Long documentId,String username) throws IOException, GitAPIException {
+    public CommitInfo restoreToPreviousCommit(Long documentId) throws IOException, GitAPIException {
 
         CommitInfo previousCommit = getPreviousCommit(documentId);
 
-        return  restoreToCommit(documentId, previousCommit.getId(),username);
+        return  restoreToCommit(documentId, previousCommit.getId());
 
 
 
@@ -176,6 +175,7 @@ public class GitServiceImpl {
             ObjectId commitObjectId = repository.resolve(commitId); // из сокращенного айди, который есть в log получаем полный, с уоторым можно путешествовать по системе
             try (RevWalk revWalk = new RevWalk(repository)) {  // reyWalk позволяет путешестовать по коммитам
                 RevCommit commit = revWalk.parseCommit(commitObjectId); // берем коммит за которым мы обратились
+                revWalk.parseBody(commit);
                 RevTree tree = commit.getTree();  // Revtree позволяет ходить по всем файлам внутри коммита(в нашем случае получить доступ к файлу .tex
                 // Ищем файл main.tex в этом коммите
                 try (TreeWalk treeWalk = new TreeWalk(repository)) {
@@ -212,13 +212,64 @@ public class GitServiceImpl {
 
 
 
+
+    }
+    public CommitInfo restoreToCommit(Long documentId, String commitId) throws IOException,GitAPIException {
+        File repoPath = new File(sourcePath, documentId.toString());
+
+        RevCommit commited;
+        try (Git git = Git.open(repoPath)) {
+            Repository repository = git.getRepository(); // возвращаем объект для путешенствия по коммитам и деревьям
+
+            ObjectId commitObjectId = repository.resolve(commitId); // из сокращенного айди, который есть в log получаем полный, с уоторым можно путешествовать по системе
+            try (RevWalk revWalk = new RevWalk(repository)) {  // reyWalk позволяет путешестовать по коммитам
+                RevCommit commit = revWalk.parseCommit(commitObjectId); // берем коммит за которым мы обратились
+                revWalk.parseBody(commit);
+                RevTree tree = commit.getTree();  // Revtree позволяет ходить по всем файлам внутри коммита(в нашем случае получить доступ к файлу .tex
+                // Ищем файл main.tex в этом коммите
+                try (TreeWalk treeWalk = new TreeWalk(repository)) {
+                    treeWalk.addTree(tree);
+                    treeWalk.setRecursive(true);
+                    treeWalk.setFilter(PathFilter.create("main.tex"));
+
+                    if (!treeWalk.next()) {
+                        throw new IllegalStateException("Файл main.tex не найден в коммите " + commitId);
+                    }
+
+                    ObjectId fileObjectId = treeWalk.getObjectId(0); //получить ID нужного файла (Blob).
+                    ObjectLoader loader = repository.open(fileObjectId); //открыть файл через ObjectLoader
+
+                    byte[] fileData = loader.getBytes();
+
+                    // Перезаписываем текущий main.tex
+                    File texFile = new File(repoPath, "main.tex");
+                    try (FileOutputStream fos = new FileOutputStream(texFile)) {
+                        fos.write(fileData);
+                    }
+
+                    // Делаем новый коммит
+                    git.add().addFilepattern("main.tex").call();
+                    commited = git.commit()
+                            .setMessage("Откат к версии " + commitId)
+                            .call();
+                }
+
+            }
+        }
+        return convertCommitToInfo(commited);
     }
 
     public CommitInfo convertCommitToInfo(RevCommit commit )
     {
+        String message;
+        try {
+            message = commit.getShortMessage();
+        } catch (Exception e) {
+            message = "(сообщение отсутствует)";
+        }
         return CommitInfo.builder()
                 .id(commit.getName())
-                .message(commit.getShortMessage())
+                .message(message)
                 .author(commit.getAuthorIdent().getName())
                 .date(Instant.ofEpochSecond(commit.getCommitTime()))
                 .build();
