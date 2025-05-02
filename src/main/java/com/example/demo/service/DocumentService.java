@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 public interface DocumentService {
-    Long createDocument(NewDocumentRequest request, Authentication authentication);
+    Long createDocument(NewDocumentRequest request, Authentication authentication) throws GitAPIException, IOException;
     void addNewUserToDocument(Long userId, Long documentId);
     List<DocumentListDTO> getDocumentsForCurrentUser(Authentication authentication);
     DocumentResponse findById(Long id) throws IOException;

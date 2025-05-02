@@ -33,6 +33,12 @@ public class GitService {
 
 
 
+    public void initializeGitWithFirstCommit(Long documentId, String content, String authorName) throws GitAPIException, IOException {
+        initRepo(documentId);
+        commitDocument(content, documentId, authorName);
+    }
+
+
 
 
     public String getLastVersionContent(Long documentId) throws IOException {

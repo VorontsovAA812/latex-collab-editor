@@ -26,12 +26,6 @@ public class Document {
     @Column(name = "title", nullable = false, length = 50)
     private String title;
 
-    @Column(
-            name = "content",
-
-            columnDefinition = "TEXT"
-    )
-    private String content = ""; // Инициализация для безопасности
 
     @ColumnDefault("CURRENT_TIMESTAMP")
     @Column(name = "created_at", nullable = false)

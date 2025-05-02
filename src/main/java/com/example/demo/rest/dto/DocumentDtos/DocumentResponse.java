@@ -18,7 +18,6 @@ public class DocumentResponse{
 
         private Long id;
         private String title;
-        private String content;
         private String ownerUsername; // Только нужные данные о владельце
         private Instant createdAt;
         private Instant updatedAt; // Отображаем

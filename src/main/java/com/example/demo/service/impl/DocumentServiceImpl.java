@@ -53,7 +53,6 @@ public class DocumentServiceImpl implements DocumentService {
         return DocumentResponse.builder()
                 .id(document.getId())
                 .title(document.getTitle())
-                .content(document.getContent())
                 .ownerUsername(document.getOwnerUser().getUsername())
                 .createdAt(document.getCreatedAt())
                 .updatedAt(document.getUpdatedAt())
@@ -89,7 +88,6 @@ public class DocumentServiceImpl implements DocumentService {
             return DocumentResponse.builder()
                     .id(document.getId())
                     .title(document.getTitle())
-                    .content(content)
                     .ownerUsername(document.getOwnerUser().getUsername())
                     .createdAt(document.getCreatedAt())
                     .updatedAt(document.getUpdatedAt())
@@ -131,7 +129,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Transactional
     @Override
-    public Long createDocument(NewDocumentRequest request, Authentication authentication) {
+    public Long createDocument(NewDocumentRequest request, Authentication authentication) throws GitAPIException, IOException {
 
 
         Long userId = null;
@@ -157,7 +155,6 @@ public class DocumentServiceImpl implements DocumentService {
         Document document = new Document();
         document.setTitle(request.getTitle());
         document.setOwnerUser(author); // Обязательно устанавливаем владельца!
-        document.setContent(request.getContent());
         // Явно устанавливаем timestamp
         document.setCreatedAt(Instant.now());
         document.setUpdatedAt(Instant.now());
@@ -186,6 +183,8 @@ public class DocumentServiceImpl implements DocumentService {
 
         // Сохраняем связь через репозиторий user_documents
         userDocumentRepo.save(userDocument);
+
+        gitService.initializeGitWithFirstCommit(savedDocument.getId(), request.getContent(), author.getUsername());
 
 
         return savedDocument.getId();
