@@ -15,7 +15,7 @@ import java.util.List;
 @RequiredArgsConstructor
 public class GitController {
 
-    private final GitServiceImpl gitService;
+    private final GitService gitService;
 
     @PostMapping("/{documentId}/init")
     public ResponseEntity<GitResponse> initRepo(@PathVariable Long documentId) throws GitAPIException, IOException {

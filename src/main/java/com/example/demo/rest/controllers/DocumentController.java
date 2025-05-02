@@ -6,6 +6,7 @@ import com.example.demo.rest.dto.DocumentDtos.DocumentListDTO;
 import com.example.demo.rest.dto.DocumentDtos.DocumentResponse;
 import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
 import com.example.demo.service.DocumentService;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +14,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Map;
 
@@ -28,14 +30,14 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DocumentResponse> findById(@PathVariable Long id) {
+    public ResponseEntity<DocumentResponse> findById(@PathVariable Long id) throws IOException {
         return  ResponseEntity.ok(documentService.findById(id));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<DocumentResponse> updateDocument(@PathVariable Long id, @RequestBody NewDocumentRequest updateDocumentRequest) {
+    public ResponseEntity<DocumentResponse> updateDocument(@PathVariable Long id, @RequestBody NewDocumentRequest updateDocumentRequest,Authentication authentication) throws GitAPIException, IOException {
 
-        return  ResponseEntity.ok(documentService.updateDocument(id,updateDocumentRequest));
+        return  ResponseEntity.ok(documentService.updateDocument(id,updateDocumentRequest,authentication));
     }
 
 

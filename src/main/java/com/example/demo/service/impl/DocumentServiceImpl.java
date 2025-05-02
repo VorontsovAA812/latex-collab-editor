@@ -3,6 +3,7 @@ package com.example.demo.service.impl;
 import com.example.demo.config.SecurityUtils;
 import com.example.demo.domain.*;
 
+import com.example.demo.git.GitService;
 import com.example.demo.repos.DocumentRepo;
 import com.example.demo.repos.UserDocumentRepo;
 import com.example.demo.rest.dto.DocumentDtos.ContentRequestDto;
@@ -12,6 +13,7 @@ import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
 import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.DocumentService;
 import com.example.demo.service.UserService;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -20,6 +22,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.server.ResponseStatusException;
 
 import javax.print.Doc;
+import java.io.IOException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -32,14 +35,16 @@ public class DocumentServiceImpl implements DocumentService {
     DocumentRepo documentRepo;
     UserService userService;
     UserDocumentRepo userDocumentRepo;
+    GitService gitService;
     private  final SecurityUtils securityUtils;
 
     @Autowired
-    public DocumentServiceImpl(DocumentRepo documentRepo, UserService userService, UserDocumentRepo userDocumentRepo,SecurityUtils securityUtils) {
+    public DocumentServiceImpl(DocumentRepo documentRepo, UserService userService, UserDocumentRepo userDocumentRepo,SecurityUtils securityUtils, GitService gitService ) {
         this.documentRepo = documentRepo;
         this.userService = userService;
         this.userDocumentRepo = userDocumentRepo;
         this.securityUtils = securityUtils;
+        this.gitService=gitService;
 
     }
 
@@ -74,15 +79,17 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Transactional(readOnly = true)
     @Override
-    public DocumentResponse findById(Long id) {
+    public DocumentResponse findById(Long id) throws IOException {
 
+        String content;
         Optional<Document> element = documentRepo.findById(id);
         if (element.isPresent()) {
             Document document =  element.get();
+            content = gitService.getLastVersionContent(id);
             return DocumentResponse.builder()
                     .id(document.getId())
                     .title(document.getTitle())
-                    .content(document.getContent())
+                    .content(content)
                     .ownerUsername(document.getOwnerUser().getUsername())
                     .createdAt(document.getCreatedAt())
                     .updatedAt(document.getUpdatedAt())
@@ -186,22 +193,36 @@ public class DocumentServiceImpl implements DocumentService {
 
     }
 
+    // метод для сохранения документа:
     @Transactional
     @Override
-    public DocumentResponse updateDocument(Long id, NewDocumentRequest updateDocumentRequest)
-    {
+    public DocumentResponse updateDocument(Long id, NewDocumentRequest updateDocumentRequest,  Authentication authentication) throws GitAPIException, IOException {
+        Long userId = null;
+
+        // Сначала проверяем обычную аутентификацию
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            userId = userDetails.getId();
+        }
+        // Если обычной аутентификации нет, пытаемся получить ID из SecurityUtils
+        else {
+            userId = securityUtils.getCurrentUserId();
+        }
+
         Optional<Document> element = documentRepo.findById(id);
         Document document = element.get();
 
         document.setTitle(updateDocumentRequest.getTitle());
-        document.setContent(updateDocumentRequest.getContent());
         document.setUpdatedAt(Instant.now());
 
         documentRepo.save(document);
 
+        User  user2= userService.findById(userId);
+        gitService.commitDocument(updateDocumentRequest.getContent(),id,user2.getUsername());
         return convertDocumentToResponse(document);
 
     }
+
 
 
 

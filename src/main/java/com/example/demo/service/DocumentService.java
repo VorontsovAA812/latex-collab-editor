@@ -4,14 +4,16 @@ import com.example.demo.rest.dto.DocumentDtos.ContentRequestDto;
 import com.example.demo.rest.dto.DocumentDtos.DocumentListDTO;
 import com.example.demo.rest.dto.DocumentDtos.DocumentResponse;
 import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
+import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.security.core.Authentication;
 
+import java.io.IOException;
 import java.util.List;
 
 public interface DocumentService {
     Long createDocument(NewDocumentRequest request, Authentication authentication);
     void addNewUserToDocument(Long userId, Long documentId);
     List<DocumentListDTO> getDocumentsForCurrentUser(Authentication authentication);
-    DocumentResponse findById(Long id);
-    DocumentResponse updateDocument(Long id, NewDocumentRequest updateDocumentRequest);
+    DocumentResponse findById(Long id) throws IOException;
+    DocumentResponse updateDocument(Long id, NewDocumentRequest updateDocumentRequest,  Authentication authentication) throws GitAPIException, IOException;
 }

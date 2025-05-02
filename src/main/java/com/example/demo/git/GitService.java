@@ -1,12 +1,7 @@
 package com.example.demo.git;
 
 
-import com.example.demo.domain.Document;
-import com.example.demo.rest.dto.DocumentDtos.DocumentResponse;
 import org.eclipse.jgit.api.errors.GitAPIException;
-import org.eclipse.jgit.errors.AmbiguousObjectException;
-import org.eclipse.jgit.errors.IncorrectObjectTypeException;
-import org.eclipse.jgit.errors.RevisionSyntaxException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
@@ -28,9 +23,11 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
+import static java.nio.file.Files.readString;
+
 
 @Service
-public class GitServiceImpl {
+public class GitService {
 
     private final String sourcePath = "./latex-versions";  // здесь git, main.tex
 
@@ -38,6 +35,21 @@ public class GitServiceImpl {
 
 
 
+    public String getLastVersionContent(Long documentId) throws IOException {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        Path textile = repoPath.resolve("main.tex");
+
+        // Если main.tex не сущ
+        if (Files.notExists(textile)) {
+            throw new FileNotFoundException("Вы ничего не сохранили ( ни одного коммита пока что нет)");
+        }
+
+        return Files.readString(textile);
+
+
+
+
+    }
 
     // создаение и иницализирование репоитория под нужный документ
     public Git initRepo(Long documentId) throws GitAPIException, IOException {
