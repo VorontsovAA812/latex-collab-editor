@@ -1,6 +1,7 @@
 package com.example.demo.rest.controllers;
 
 import com.example.demo.exception.LatexCompilationException;
+import com.example.demo.rest.dto.DocumentDtos.LatexResponseBuilder;
 import com.example.demo.service.DocumentService;
 import com.example.demo.service.impl.LatexService;
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ public class LatexController {
 
 
 
-        return latexService.compileLaTeX(request);
+        return LatexResponseBuilder.buildPdfResponse(request.getTitle(),latexService.compileLaTeX(request));
 
 }
 

@@ -8,10 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
-import org.springframework.http.ContentDisposition;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+
 import org.springframework.stereotype.Service;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -55,7 +52,7 @@ public class LatexService {
 
     }
 
-    public ResponseEntity<Resource> compileLaTeX(@RequestBody LatexCompileRequest request) throws IOException, InterruptedException, LatexCompilationException {
+    public Resource compileLaTeX(@RequestBody LatexCompileRequest request) throws IOException, InterruptedException, LatexCompilationException {
 
         String documentId = Long.toString(request.getId());
 
@@ -126,17 +123,10 @@ public class LatexService {
             );
         }
 
-        HttpHeaders headers = new HttpHeaders(); // создаем MULTYMAP для заголовков
-
-        headers.setContentType(MediaType.APPLICATION_PDF);
-        headers.setContentDisposition(ContentDisposition
-                .builder("inline")
-                .filename(filenamePdf, StandardCharsets.UTF_8).build());
 
 
-        return ResponseEntity.ok()
-                .headers(headers)
-                .body(new FileSystemResource(pdfFilePath.toFile()));
+
+        return new FileSystemResource(pdfFilePath.toFile());
 
     }
 
