@@ -58,8 +58,7 @@ public class LatexService {
 
         copyForCompilation(request.getId());
 
-
-
+        
 
         // Используем абсолютный путь вместо относительного
         Path workDirPath = Paths.get(LATEX_FILES_DIR, documentId).toAbsolutePath().normalize();
@@ -68,11 +67,10 @@ public class LatexService {
         Files.createDirectories(workDirPath);
 
         String latexSource = request.getContent(); // берем latex код в виде String
-        String filename = request.getTitle();
 
 
-        String filenameTex = filename + ".tex";
-        String filenamePdf = filename + ".pdf";
+        String filenameTex = "main" + ".tex";
+        String filenamePdf = "main" + ".pdf";
 
         Path texFilePath = Paths.get(workDir, filenameTex); // создаем путь  ./latex-files/documentId/title.tex
         Path pdfFilePath = Paths.get(workDir, filenamePdf); // создаем путь  ./latex-files/documentId/title.tex

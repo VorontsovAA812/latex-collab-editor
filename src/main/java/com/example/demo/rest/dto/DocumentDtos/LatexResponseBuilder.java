@@ -12,12 +12,11 @@ import java.nio.file.Path;
 
 public class LatexResponseBuilder {
 
-    public static ResponseEntity<Resource> buildPdfResponse(String filenamePdf, Resource pdf) {
+    public static ResponseEntity<Resource> buildPdfResponse( Resource pdf) {
         HttpHeaders headers = new HttpHeaders(); // создаем MULTYMAP для заголовков
         headers.setContentType(MediaType.APPLICATION_PDF);
         headers.setContentDisposition(ContentDisposition
-                .builder("inline")
-                .filename(filenamePdf, StandardCharsets.UTF_8).build());
+                .builder("inline").build());
         return ResponseEntity.ok()
                 .headers(headers)
                 .body(pdf);

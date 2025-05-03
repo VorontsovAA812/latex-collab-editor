@@ -15,6 +15,5 @@ import lombok.NoArgsConstructor;
 public class LatexCompileRequest {
     private Long id;
     private String content;
-    private String title;
 
 }

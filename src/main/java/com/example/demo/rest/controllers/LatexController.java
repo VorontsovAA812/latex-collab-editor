@@ -37,7 +37,7 @@ public class LatexController {
 
 
 
-        return LatexResponseBuilder.buildPdfResponse(request.getTitle(),latexService.compileLaTeX(request));
+        return LatexResponseBuilder.buildPdfResponse(latexService.compileLaTeX(request));
 
 }
 
