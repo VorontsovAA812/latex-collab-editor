@@ -36,8 +36,7 @@ public class LatexController {
 
 
 
-        return ResponseEntity.ok()
-                .body(latexService.compileLaTeX(request));
+        return latexService.compileLaTeX(request);
 
 }
 

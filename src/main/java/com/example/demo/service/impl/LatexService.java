@@ -55,7 +55,7 @@ public class LatexService {
 
     }
 
-    public Resource compileLaTeX(@RequestBody LatexCompileRequest request) throws IOException, InterruptedException, LatexCompilationException {
+    public ResponseEntity<Resource> compileLaTeX(@RequestBody LatexCompileRequest request) throws IOException, InterruptedException, LatexCompilationException {
 
         String documentId = Long.toString(request.getId());
 
@@ -134,7 +134,9 @@ public class LatexService {
                 .filename(filenamePdf, StandardCharsets.UTF_8).build());
 
 
-        return new FileSystemResource(pdfFilePath.toFile());
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(new FileSystemResource(pdfFilePath.toFile()));
 
     }
 
