@@ -21,6 +21,7 @@ public class DocumentResponse{
         private String ownerUsername; // Только нужные данные о владельце
         private Instant createdAt;
         private Instant updatedAt; // Отображаем
+        private String content;
 
 
 

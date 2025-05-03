@@ -48,15 +48,18 @@ public class DocumentServiceImpl implements DocumentService {
 
     }
 
-    public DocumentResponse convertDocumentToResponse(Document document )
-    {
-        return DocumentResponse.builder()
+    public DocumentResponse convertDocumentToResponse(Document document,  boolean includeContent) throws IOException {
+        DocumentResponse.DocumentResponseBuilder builder= DocumentResponse.builder()
                 .id(document.getId())
                 .title(document.getTitle())
                 .ownerUsername(document.getOwnerUser().getUsername())
                 .createdAt(document.getCreatedAt())
-                .updatedAt(document.getUpdatedAt())
-                .build();
+                .updatedAt(document.getUpdatedAt());
+
+         if(includeContent) {
+              builder.content(gitService.getLastVersionContent(document.getId()));
+         }
+         return builder.build();
     }
 
 
@@ -78,19 +81,26 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Transactional(readOnly = true)
     @Override
-    public DocumentResponse findById(Long id) throws IOException {
+    public DocumentResponse findById(Long id,boolean includeContent) throws IOException {
 
-        String content;
         Optional<Document> element = documentRepo.findById(id);
         if (element.isPresent()) {
+
             Document document =  element.get();
-            content = gitService.getLastVersionContent(id);
+
+            String content = null;
+            if(includeContent){
+                content = gitService.getLastVersionContent(id);
+
+            }
+
             return DocumentResponse.builder()
                     .id(document.getId())
                     .title(document.getTitle())
                     .ownerUsername(document.getOwnerUser().getUsername())
                     .createdAt(document.getCreatedAt())
                     .updatedAt(document.getUpdatedAt())
+                    .content(content)
                     .build();
         } else {
             throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Документ не найден");
@@ -218,7 +228,7 @@ public class DocumentServiceImpl implements DocumentService {
 
         User  user2= userService.findById(userId);
         gitService.commitDocument(updateDocumentRequest.getContent(),id,user2.getUsername());
-        return convertDocumentToResponse(document);
+        return convertDocumentToResponse(document,true);
 
     }
 

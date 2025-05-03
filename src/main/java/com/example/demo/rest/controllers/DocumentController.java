@@ -30,8 +30,9 @@ public class DocumentController {
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<DocumentResponse> findById(@PathVariable Long id) throws IOException {
-        return  ResponseEntity.ok(documentService.findById(id));
+    public ResponseEntity<DocumentResponse> findById(@PathVariable Long id,
+                                                    @RequestParam(name = "includeContent", defaultValue = "true") boolean includeContent) throws IOException {
+        return  ResponseEntity.ok(documentService.findById(id,includeContent));
     }
 
     @PatchMapping("/{id}")
@@ -42,7 +43,7 @@ public class DocumentController {
 
 
     @PostMapping("")
-    public ResponseEntity<Map<String, Long>> createDocument(@RequestBody NewDocumentRequest request, Authentication authentication) {
+    public ResponseEntity<Map<String, Long>> createDocument(@RequestBody NewDocumentRequest request, Authentication authentication) throws GitAPIException, IOException {
 
         // Передаем ID пользователя и данные документа в сервис
         Long documentId = documentService.createDocument(request, authentication);
