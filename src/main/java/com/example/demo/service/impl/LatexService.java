@@ -111,7 +111,7 @@ public class LatexService {
 
         int exitCode = process.waitFor();
 
-        if (exitCode != 0 || !Files.exists(pdfFilePath)) {
+        if (!Files.exists(pdfFilePath)) {
             String errorMessage = "Ошибка компиляции. Вывод:\n" + output.toString();
             logger.error(errorMessage); // Запись в лог
             System.err.println(errorMessage); // Вывод в консоль
@@ -120,6 +120,11 @@ public class LatexService {
                     output.toString()
             );
         }
+
+        if(exitCode != 0) {
+            logger.warn("Компиляция завершилась с ошибками, но PDF создан. Вывод:\\n{}", output);
+        }
+
 
 
 
