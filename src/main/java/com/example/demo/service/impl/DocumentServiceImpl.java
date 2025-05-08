@@ -3,6 +3,7 @@ package com.example.demo.service.impl;
 import com.example.demo.config.SecurityUtils;
 import com.example.demo.domain.*;
 
+import com.example.demo.exception.BusinessException;
 import com.example.demo.git.GitService;
 import com.example.demo.repos.DocumentRepo;
 import com.example.demo.repos.UserDocumentRepo;
@@ -13,6 +14,7 @@ import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
 import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.DocumentService;
 import com.example.demo.service.UserService;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -23,6 +25,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import javax.print.Doc;
 import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +52,21 @@ public class DocumentServiceImpl implements DocumentService {
 
     }
 
+    public  Long  getCurrentUserId(Authentication authentication) {
+        Long userId = null;
+
+        // Сначала проверяем обычную аутентификацию
+        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof CustomUserDetails) {
+            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
+            userId = userDetails.getId();
+        }
+        // Если обычной аутентификации нет, пытаемся получить ID из SecurityUtils
+        else {
+            userId = securityUtils.getCurrentUserId();
+        }
+        return userId;
+    }
+
     public DocumentResponse convertDocumentToResponse(Document document,  boolean includeContent) throws IOException {
         DocumentResponse.DocumentResponseBuilder builder= DocumentResponse.builder()
                 .id(document.getId())
@@ -61,7 +80,6 @@ public class DocumentServiceImpl implements DocumentService {
          }
          return builder.build();
     }
-
 
     @Transactional
     @Override
@@ -78,6 +96,7 @@ public class DocumentServiceImpl implements DocumentService {
         // Сохранить обновленного пользователя
         userService.save(user);
     }
+
 
     @Transactional(readOnly = true)
     @Override
@@ -113,17 +132,7 @@ public class DocumentServiceImpl implements DocumentService {
     public List<DocumentListDTO> getDocumentsForCurrentUser(Authentication authentication) {
 
 
-        Long userId = null;
-
-        // Сначала проверяем обычную аутентификацию
-        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof CustomUserDetails) {
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            userId = userDetails.getId();
-        }
-        // Если обычной аутентификации нет, пытаемся получить ID из SecurityUtils
-        else {
-            userId = securityUtils.getCurrentUserId();
-        }
+        Long userId = getCurrentUserId(authentication);
 
         List<Document> documents =documentRepo.findAllDocumentsByUserId(userId);
         List<DocumentListDTO> result = new ArrayList<>();
@@ -142,17 +151,8 @@ public class DocumentServiceImpl implements DocumentService {
     public Long createDocument(NewDocumentRequest request, Authentication authentication) throws GitAPIException, IOException {
 
 
-        Long userId = null;
+        Long userId = getCurrentUserId(authentication);
 
-        // Сначала проверяем обычную аутентификацию
-        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof CustomUserDetails) {
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            userId = userDetails.getId();
-        }
-        // Если обычной аутентификации нет, пытаемся получить ID из SecurityUtils
-        else {
-            userId = securityUtils.getCurrentUserId();
-        }
 
 
 
@@ -206,17 +206,8 @@ public class DocumentServiceImpl implements DocumentService {
     @Transactional
     @Override
     public DocumentResponse updateDocument(Long id, NewDocumentRequest updateDocumentRequest,  Authentication authentication) throws GitAPIException, IOException {
-        Long userId = null;
+        Long userId = getCurrentUserId(authentication);
 
-        // Сначала проверяем обычную аутентификацию
-        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof CustomUserDetails) {
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            userId = userDetails.getId();
-        }
-        // Если обычной аутентификации нет, пытаемся получить ID из SecurityUtils
-        else {
-            userId = securityUtils.getCurrentUserId();
-        }
 
         Optional<Document> element = documentRepo.findById(id);
         Document document = element.get();
@@ -231,6 +222,34 @@ public class DocumentServiceImpl implements DocumentService {
         return convertDocumentToResponse(document,true);
 
     }
+
+    public void deleteDocument(Long documentId, Authentication authentication) throws IOException {
+
+        Long userId = getCurrentUserId(authentication);
+
+        Optional<Document> element = documentRepo.findById(documentId);
+
+        Document document = element.get();
+
+        if(!document.getOwnerUser().getId().equals(userId))
+        {
+            throw new BusinessException("Вы не можете удалить этот документ");
+        }
+
+        Path repoPath = Paths.get("./latex-versions", documentId.toString()).toAbsolutePath().normalize();
+
+        FileUtils.deleteDirectory(repoPath.toFile());
+
+        Path repoPath2 = Paths.get("./latex-files", documentId.toString()).toAbsolutePath().normalize();
+        FileUtils.deleteDirectory(repoPath2.toFile());
+
+        documentRepo.delete(document);
+
+
+
+
+    }
+
 
 
 

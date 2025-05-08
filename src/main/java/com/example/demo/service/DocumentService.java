@@ -16,4 +16,6 @@ public interface DocumentService {
     List<DocumentListDTO> getDocumentsForCurrentUser(Authentication authentication);
     DocumentResponse findById(Long id,boolean includeContent) throws IOException;
     DocumentResponse updateDocument(Long id, NewDocumentRequest updateDocumentRequest,  Authentication authentication) throws GitAPIException, IOException;
+   Long  getCurrentUserId(Authentication authentication);
+   void deleteDocument(Long id, Authentication authentication) throws IOException;
 }
