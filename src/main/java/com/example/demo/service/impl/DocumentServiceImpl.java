@@ -213,7 +213,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     @Transactional
     @Override
-    public void deleteDocument(Long documentId, Authentication authentication) throws IOException {
+    public Long deleteDocument(Long documentId, Authentication authentication) throws IOException {
 
         Long userId = getCurrentUserId(authentication);
 
@@ -234,6 +234,8 @@ public class DocumentServiceImpl implements DocumentService {
         FileUtils.deleteDirectory(repoPath2.toFile());
 
         documentRepo.delete(document);
+
+        return documentId;
 
 
 
@@ -285,8 +287,52 @@ public class DocumentServiceImpl implements DocumentService {
 
         }
 
+    public void leaveDocument(Long documentId, Authentication authentication) {
+        Long userId = getCurrentUserId(authentication);
+
+        UserDocumentId id = new UserDocumentId(userId, documentId);
+
+        Document document = documentRepo.findById(documentId)
+                .orElseThrow(() -> new BusinessException("Документ не найден"));
+
+        if (userId.equals(document.getOwnerUser().getId())) {
+            throw new BusinessException("Автор не может локально удалить документ");
+        }
+
+        if (!userDocumentRepo.existsById(id)) {
+            throw new BusinessException("Вы не являетесь участником документа");
+        }
+
+        userDocumentRepo.deleteById(id);
 
     }
+
+
+
+    @Transactional
+    @Override
+    public void deleteAllDocuments() throws IOException {
+        List<Document> allDocuments = documentRepo.findAll();
+
+        for (Document doc : allDocuments) {
+            Long documentId = doc.getId();
+
+            // Удаляем Git-репозиторий
+            Path gitPath = Paths.get("./latex-versions", documentId.toString()).toAbsolutePath();
+            FileUtils.deleteDirectory(gitPath.toFile());
+
+            // Удаляем latex-файлы
+            Path latexPath = Paths.get("./latex-files", documentId.toString()).toAbsolutePath();
+            FileUtils.deleteDirectory(latexPath.toFile());
+        }
+
+        // Удаление всех записей
+        documentRepo.deleteAll();
+    }
+
+
+
+}
 
 
 

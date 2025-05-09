@@ -23,7 +23,8 @@ public interface DocumentService {
 
     Long getCurrentUserId(Authentication authentication);
 
-    void deleteDocument(Long id, Authentication authentication) throws IOException;
+    Long deleteDocument(Long id, Authentication authentication) throws IOException;
+    void deleteAllDocuments() throws IOException;
 
      UserDto inviteUserToDocument(Long documentId, String username, Authentication authentication);
 

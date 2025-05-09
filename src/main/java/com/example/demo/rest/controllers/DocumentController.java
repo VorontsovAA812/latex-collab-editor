@@ -23,7 +23,8 @@ import java.util.Map;
 @RequestMapping("/api/v1/documents")
 public class DocumentController {
     private final DocumentService documentService;
-    private  final  SecurityUtils securityUtils;
+    private final SecurityUtils securityUtils;
+
     @Autowired
     public DocumentController(DocumentService documentService, SecurityUtils securityUtils) {
         this.documentService = documentService;
@@ -32,14 +33,14 @@ public class DocumentController {
 
     @GetMapping("/{id}")
     public ResponseEntity<DocumentResponse> findById(@PathVariable Long id,
-                                                    @RequestParam(name = "includeContent", defaultValue = "true") boolean includeContent) throws IOException {
-        return  ResponseEntity.ok(documentService.findById(id,includeContent));
+                                                     @RequestParam(name = "includeContent", defaultValue = "true") boolean includeContent) throws IOException {
+        return ResponseEntity.ok(documentService.findById(id, includeContent));
     }
 
     @PatchMapping("/{id}")
-    public ResponseEntity<DocumentResponse> updateDocument(@PathVariable Long id, @RequestBody NewDocumentRequest updateDocumentRequest,Authentication authentication) throws GitAPIException, IOException {
+    public ResponseEntity<DocumentResponse> updateDocument(@PathVariable Long id, @RequestBody NewDocumentRequest updateDocumentRequest, Authentication authentication) throws GitAPIException, IOException {
 
-        return  ResponseEntity.ok(documentService.updateDocument(id,updateDocumentRequest,authentication));
+        return ResponseEntity.ok(documentService.updateDocument(id, updateDocumentRequest, authentication));
     }
 
 
@@ -56,20 +57,35 @@ public class DocumentController {
 
     @GetMapping("/documentList")
     public ResponseEntity<List<DocumentListDTO>> getDocumentsForCurrentUser(Authentication authentication) {
-        List<DocumentListDTO> documents = documentService.getDocumentsForCurrentUser( authentication);
+        List<DocumentListDTO> documents = documentService.getDocumentsForCurrentUser(authentication);
 
 
-
-        return ResponseEntity.ok( documents);
+        return ResponseEntity.ok(documents);
     }
 
 
     @PostMapping("/{documentId}/invite/{username}")
-    public ResponseEntity<UserDto> inviteUserToDocument(@PathVariable Long documentId, @PathVariable String username, Authentication  authentication) {
+    public ResponseEntity<UserDto> inviteUserToDocument(@PathVariable Long documentId, @PathVariable String username, Authentication authentication) {
 
-        return ResponseEntity.ok(documentService.inviteUserToDocument(documentId,username,authentication));
+        return ResponseEntity.ok(documentService.inviteUserToDocument(documentId, username, authentication));
     }
 
+    @DeleteMapping("/{documentId}")
+    public ResponseEntity<Long> deleteDocument(@PathVariable Long documentId, Authentication authentication) throws IOException {
 
+        return  ResponseEntity.ok(documentService.deleteDocument(documentId,authentication));
+
+    }
+
+    @DeleteMapping("/admin/delete-all")
+    public ResponseEntity<Void> deleteAll() throws IOException {
+        documentService.deleteAllDocuments();
+        return ResponseEntity.noContent().build();
+    }
 
 }
+
+
+
+
+
