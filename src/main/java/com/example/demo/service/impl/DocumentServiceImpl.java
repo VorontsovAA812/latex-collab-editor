@@ -287,8 +287,9 @@ public class DocumentServiceImpl implements DocumentService {
 
 
         }
-
-    public void leaveDocument(Long documentId, Authentication authentication) {
+@Transactional
+@Override
+    public Long leaveDocument(Long documentId, Authentication authentication) {
         Long userId = getCurrentUserId(authentication);
 
         UserDocumentId id = new UserDocumentId(userId, documentId);
@@ -305,8 +306,10 @@ public class DocumentServiceImpl implements DocumentService {
         }
 
         userDocumentRepo.deleteById(id);
+        return  documentId;
 
     }
+
 
 
 

@@ -76,6 +76,12 @@ public class DocumentController {
         return  ResponseEntity.ok(documentService.deleteDocument(documentId,authentication));
 
     }
+    @DeleteMapping("/{documentId}/leave")
+    public ResponseEntity<Long> leaveDocument(@PathVariable Long documentId, Authentication authentication) {
+        Long result = documentService.leaveDocument(documentId, authentication);
+        return ResponseEntity.ok(result);
+    }
+
 
 
 

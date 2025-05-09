@@ -25,6 +25,7 @@ public interface DocumentService {
 
     Long deleteDocument(Long id, Authentication authentication) throws IOException;
     void deleteAllDocuments() throws IOException;
+    Long leaveDocument(Long documentId, Authentication authentication);
 
      UserDto inviteUserToDocument(Long documentId, String username, Authentication authentication);
 
