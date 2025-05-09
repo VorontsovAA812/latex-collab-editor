@@ -196,9 +196,10 @@ public class DocumentServiceImpl implements DocumentService {
     public DocumentResponse updateDocument(Long id, NewDocumentRequest updateDocumentRequest,  Authentication authentication) throws GitAPIException, IOException {
         Long userId = getCurrentUserId(authentication);
 
+        Document document = documentRepo.findById(id)
+                .orElseThrow(() -> new BusinessException("Документ не найден"));
 
-        Optional<Document> element = documentRepo.findById(id);
-        Document document = element.get();
+
 
         document.setTitle(updateDocumentRequest.getTitle());
         document.setUpdatedAt(Instant.now());

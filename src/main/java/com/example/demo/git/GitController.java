@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/git")
+@RequestMapping("/api/v1/git")
 @RequiredArgsConstructor
 public class GitController {
 

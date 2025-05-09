@@ -77,6 +77,8 @@ public class DocumentController {
 
     }
 
+
+
     @DeleteMapping("/admin/delete-all")
     public ResponseEntity<Void> deleteAll() throws IOException {
         documentService.deleteAllDocuments();
