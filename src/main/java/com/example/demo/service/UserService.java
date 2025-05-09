@@ -10,7 +10,7 @@ public interface UserService {
 
     Long addNewUser(NewUserRequest request);
     void deleteById(Long id);
-    UserDto findByUsername(String username);
+    User findByUsername(String username);
     void save(User author);
 
 }

@@ -37,13 +37,11 @@ public class UserServiceImpl implements UserService {
 
 
         @Override
-        public UserDto findByUsername(String username) {
-            Optional<User> element = userRepo.findByUsername(username);
-            if (element.isEmpty()) {
-                throw new UserNotFoundExceptionByName("Пользователь с таким именем не существует");
-            }
-             User user= element.get();
-            return new UserDto(user.getUsername(),user.getRole(),user.getIsOnline());
+        public User findByUsername(String username) {
+
+
+            return userRepo.findByUsername(username)
+                    .orElseThrow(() -> new UserNotFoundException("Пользователь не найден"));
     }
 
 

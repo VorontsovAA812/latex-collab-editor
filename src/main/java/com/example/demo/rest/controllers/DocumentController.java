@@ -5,6 +5,7 @@ import com.example.demo.rest.dto.DocumentDtos.ContentRequestDto;
 import com.example.demo.rest.dto.DocumentDtos.DocumentListDTO;
 import com.example.demo.rest.dto.DocumentDtos.DocumentResponse;
 import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
+import com.example.demo.rest.dto.UserDtos.UserDto;
 import com.example.demo.service.DocumentService;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -63,10 +64,12 @@ public class DocumentController {
     }
 
 
-    @PostMapping("/{documentId}/user/{userId}")
-    public ResponseEntity<Void> addNewUserToDocument(@PathVariable Long documentId, @PathVariable Long userId) {
-        documentService.addNewUserToDocument(userId, documentId);
-        return ResponseEntity.status(HttpStatus.NO_CONTENT).build();
+    @PostMapping("/{documentId}/invite/{username}")
+    public ResponseEntity<UserDto> inviteUserToDocument(@PathVariable Long documentId, @PathVariable String username, Authentication  authentication) {
+
+        return ResponseEntity.ok(documentService.inviteUserToDocument(documentId,username,authentication));
     }
+
+
 
 }

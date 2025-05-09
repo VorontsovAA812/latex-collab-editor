@@ -47,8 +47,11 @@ public class UserController {
     @GetMapping("/by-username/{username}")
     public ResponseEntity<UserDto> findByUsername(@PathVariable String username)
     {
-        UserDto userDto = userService.findByUsername(username);
-        return ResponseEntity.ok(userDto);
+        User user = userService.findByUsername(username);
+
+
+
+        return ResponseEntity.ok(new UserDto( user.getUsername(),user.getRole(),user.getIsOnline()));
 
     }
 

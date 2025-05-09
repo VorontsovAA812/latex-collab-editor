@@ -11,6 +11,7 @@ import com.example.demo.rest.dto.DocumentDtos.ContentRequestDto;
 import com.example.demo.rest.dto.DocumentDtos.DocumentListDTO;
 import com.example.demo.rest.dto.DocumentDtos.DocumentResponse;
 import com.example.demo.rest.dto.DocumentDtos.NewDocumentRequest;
+import com.example.demo.rest.dto.UserDtos.UserDto;
 import com.example.demo.security.CustomUserDetails;
 import com.example.demo.service.DocumentService;
 import com.example.demo.service.UserService;
@@ -37,6 +38,7 @@ public class DocumentServiceImpl implements DocumentService {
 
 
     DocumentRepo documentRepo;
+
     UserService userService;
     UserDocumentRepo userDocumentRepo;
     GitService gitService;
@@ -81,21 +83,7 @@ public class DocumentServiceImpl implements DocumentService {
          return builder.build();
     }
 
-    @Transactional
-    @Override
-    public void addNewUserToDocument(Long userId, Long documentId) {
-        // Найти документ по ID
-        Optional<Document> element = documentRepo.findById(documentId);
-        Document document = element.get();
 
-        // Найти пользователя по ID
-        User user = userService.findById(userId);
-
-        // Установить связь пользователя с документом
-
-        // Сохранить обновленного пользователя
-        userService.save(user);
-    }
 
 
     @Transactional(readOnly = true)
@@ -223,6 +211,8 @@ public class DocumentServiceImpl implements DocumentService {
 
     }
 
+    @Transactional
+    @Override
     public void deleteDocument(Long documentId, Authentication authentication) throws IOException {
 
         Long userId = getCurrentUserId(authentication);
@@ -250,9 +240,58 @@ public class DocumentServiceImpl implements DocumentService {
 
     }
 
+    @Transactional
+    @Override
+   public UserDto inviteUserToDocument(Long documentId, String username, Authentication authentication) {
+
+        // 1. Проверка: существует ли документ
+        Document document = documentRepo.findById(documentId)
+                .orElseThrow(() -> new BusinessException("Документ не найден"));
+
+
+        Long userId = getCurrentUserId(authentication);
+        if(!userId.equals(document.getOwnerUser().getId())) {
+            throw  new BusinessException("Только автор может приглашать пользователей");
+
+
+        }
+
+
+        User userToInvite = userService.findByUsername(username);
+        /*
+        if(!userToInvite.getIsOnline())
+        {
+            throw new BusinessException("Пользователь не онлайн");
+        }
+        */
+
+        UserDocumentId id = new UserDocumentId(userToInvite.getId(), documentId);
+        if (userDocumentRepo.existsById(id)) {
+            throw new BusinessException("Пользователь уже имеет доступ к документу");
+        }
+        UserDocument userDocument = new UserDocument();
+        userDocument.setId(id);
+
+
+        userDocument.setUser(userToInvite);
+        userDocument.setDocument(document);
+        userDocument.setAddedAt(Instant.now());
+        userDocument.setPermissionLevel("write");
+        userDocumentRepo.save(userDocument);
+
+
+        return new UserDto(userToInvite.getUsername(),userToInvite.getRole(),userToInvite.getIsOnline());
+
+
+        }
+
+
+    }
 
 
 
 
 
-}
+
+
+

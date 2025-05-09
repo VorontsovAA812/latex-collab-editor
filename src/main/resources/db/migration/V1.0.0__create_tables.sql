@@ -1,7 +1,7 @@
 CREATE TABLE users
 (
     user_id SERIAL PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
+    username VARCHAR(50) NOT NULL UNIQUE,  -- уникальность по имени явно прописана
     role VARCHAR(20) DEFAULT 'user' CHECK (role IN ('user', 'admin')),
     password VARCHAR(50) NOT NULL, -- Хранение хэшированных паролей,
     is_online BOOLEAN NOT NULL DEFAULT FALSE,
