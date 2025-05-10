@@ -11,5 +11,6 @@ public class DocumentListDTO {
 
     private String title;
     private Long id;
-
+    private String author;
+    private boolean isOwner;
 }

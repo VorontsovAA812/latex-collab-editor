@@ -17,6 +17,8 @@ import com.example.demo.service.DocumentService;
 import com.example.demo.service.UserService;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
@@ -35,6 +37,8 @@ import java.util.Optional;
 
 @Service
 public class DocumentServiceImpl implements DocumentService {
+
+    private static final Logger log = LoggerFactory.getLogger(DocumentServiceImpl.class);
 
 
     DocumentRepo documentRepo;
@@ -125,7 +129,22 @@ public class DocumentServiceImpl implements DocumentService {
         List<Document> documents =documentRepo.findAllDocumentsByUserId(userId);
         List<DocumentListDTO> result = new ArrayList<>();
         for (Document doc : documents) {
-            DocumentListDTO dto = new DocumentListDTO(doc.getTitle(),doc.getId());
+            DocumentListDTO dto;
+            if(userId.equals(doc.getOwnerUser().getId())) {
+                dto = new DocumentListDTO(doc.getTitle(), doc.getId(), doc.getOwnerUser().getUsername(),true);
+                log.info("первый случай");
+
+            }
+            else{
+               dto = new DocumentListDTO(doc.getTitle(), doc.getId(), doc.getOwnerUser().getUsername(),false);
+
+            }
+
+            log.info("Current userId: {}", userId);
+            log.info("Doc ownerId: {}", doc.getOwnerUser().getId());
+
+
+
             result.add(dto);
         }
 
