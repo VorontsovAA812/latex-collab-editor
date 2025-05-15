@@ -12,6 +12,5 @@ public class RestoreToCommitRequest {
 
 
    private String commitId;
-    private String username;
 
 }

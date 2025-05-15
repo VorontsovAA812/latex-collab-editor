@@ -1,6 +1,9 @@
 package com.example.demo.git;
 
 
+import com.example.demo.service.DocumentService;
+import com.example.demo.service.UserService;
+import com.example.demo.service.impl.UserServiceImpl;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
@@ -10,6 +13,8 @@ import org.eclipse.jgit.revwalk.RevTree;
 import org.eclipse.jgit.revwalk.RevWalk;
 import org.eclipse.jgit.treewalk.TreeWalk;
 import org.eclipse.jgit.treewalk.filter.PathFilter;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.eclipse.jgit.api.Git;
 
@@ -31,6 +36,14 @@ public class GitService {
 
     private final String sourcePath = "./latex-versions";  // здесь git, main.tex
 
+    private final DocumentService documentService;
+    private final UserService userServiceImpl;
+
+    @Autowired
+    public GitService(DocumentService documentService, UserService userServiceImpl) {
+        this.documentService = documentService;
+        this.userServiceImpl = userServiceImpl;
+    }
 
 
     public void initializeGitWithFirstCommit(Long documentId, String content, String authorName) throws GitAPIException, IOException {
@@ -183,9 +196,10 @@ public class GitService {
 
 
     }
-    public CommitInfo restoreToCommit(Long documentId, String commitId,String username) throws IOException,GitAPIException {
+    public CommitInfo restoreToCommit(Long documentId, String commitId, Authentication authentication) throws IOException,GitAPIException {
         File repoPath = new File(sourcePath, documentId.toString());
-
+        Long userId = documentService.getCurrentUserId(authentication);
+        String username = userServiceImpl.findById(userId).getUsername();
         RevCommit commited;
         try (Git git = Git.open(repoPath)) {
             Repository repository = git.getRepository(); // возвращаем объект для путешенствия по коммитам и деревьям

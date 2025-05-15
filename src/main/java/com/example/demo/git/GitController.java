@@ -5,6 +5,7 @@ package com.example.demo.git;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.IOException;
@@ -57,9 +58,9 @@ public class GitController {
 
 
     @PostMapping("/{documentId}/restore")
-    public ResponseEntity<GitResponse> restoreDocumentToCommit(@PathVariable Long documentId,@RequestBody RestoreToCommitRequest request) throws IOException, GitAPIException {
+    public ResponseEntity<GitResponse> restoreDocumentToCommit(@PathVariable Long documentId,@RequestBody RestoreToCommitRequest request, Authentication authentication) throws IOException, GitAPIException {
 
-        CommitInfo commitInfo =  gitService.restoreToCommit(documentId, request.getCommitId(), request.getUsername());
+        CommitInfo commitInfo =  gitService.restoreToCommit(documentId, request.getCommitId(),  authentication);
 
        return ResponseEntity.ok(GitResponse.builder()
                 .message("Документ успешно откатан к версии " + request.getCommitId())
