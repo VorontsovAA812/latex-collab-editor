@@ -21,7 +21,6 @@ public interface DocumentService {
 
     DocumentResponse updateDocument(Long id, NewDocumentRequest updateDocumentRequest, Authentication authentication) throws GitAPIException, IOException;
 
-    Long getCurrentUserId(Authentication authentication);
 
     Long deleteDocument(Long id, Authentication authentication) throws IOException;
     void deleteAllDocuments() throws IOException;

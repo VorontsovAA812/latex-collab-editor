@@ -58,20 +58,7 @@ public class DocumentServiceImpl implements DocumentService {
 
     }
 
-    public  Long  getCurrentUserId(Authentication authentication) {
-        Long userId = null;
 
-        // Сначала проверяем обычную аутентификацию
-        if (authentication != null && authentication.isAuthenticated() && authentication.getPrincipal() instanceof CustomUserDetails) {
-            CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();
-            userId = userDetails.getId();
-        }
-        // Если обычной аутентификации нет, пытаемся получить ID из SecurityUtils
-        else {
-            userId = securityUtils.getCurrentUserId();
-        }
-        return userId;
-    }
 
     public DocumentResponse convertDocumentToResponse(Document document,  boolean includeContent) throws IOException {
         DocumentResponse.DocumentResponseBuilder builder= DocumentResponse.builder()
@@ -124,7 +111,7 @@ public class DocumentServiceImpl implements DocumentService {
     public List<DocumentListDTO> getDocumentsForCurrentUser(Authentication authentication) {
 
 
-        Long userId = getCurrentUserId(authentication);
+        Long userId = userService.getCurrentUserId(authentication);
 
         List<Document> documents =documentRepo.findAllDocumentsByUserId(userId);
         List<DocumentListDTO> result = new ArrayList<>();
@@ -158,7 +145,7 @@ public class DocumentServiceImpl implements DocumentService {
     public Long createDocument(NewDocumentRequest request, Authentication authentication) throws GitAPIException, IOException {
 
 
-        Long userId = getCurrentUserId(authentication);
+        Long userId = userService.getCurrentUserId(authentication);
 
 
 
@@ -213,7 +200,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Transactional
     @Override
     public DocumentResponse updateDocument(Long id, NewDocumentRequest updateDocumentRequest,  Authentication authentication) throws GitAPIException, IOException {
-        Long userId = getCurrentUserId(authentication);
+        Long userId = userService.getCurrentUserId(authentication);
 
         Document document = documentRepo.findById(id)
                 .orElseThrow(() -> new BusinessException("Документ не найден"));
@@ -235,7 +222,7 @@ public class DocumentServiceImpl implements DocumentService {
     @Override
     public Long deleteDocument(Long documentId, Authentication authentication) throws IOException {
 
-        Long userId = getCurrentUserId(authentication);
+        Long userId = userService.getCurrentUserId(authentication);
 
         Optional<Document> element = documentRepo.findById(documentId);
 
@@ -271,7 +258,7 @@ public class DocumentServiceImpl implements DocumentService {
                 .orElseThrow(() -> new BusinessException("Документ не найден"));
 
 
-        Long userId = getCurrentUserId(authentication);
+        Long userId = userService.getCurrentUserId(authentication);
         if(!userId.equals(document.getOwnerUser().getId())) {
             throw  new BusinessException("Только автор может приглашать пользователей");
 
@@ -309,7 +296,7 @@ public class DocumentServiceImpl implements DocumentService {
 @Transactional
 @Override
     public Long leaveDocument(Long documentId, Authentication authentication) {
-        Long userId = getCurrentUserId(authentication);
+        Long userId = userService.getCurrentUserId(authentication);
 
         UserDocumentId id = new UserDocumentId(userId, documentId);
 

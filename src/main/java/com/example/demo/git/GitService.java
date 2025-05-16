@@ -36,13 +36,11 @@ public class GitService {
 
     private final String sourcePath = "./latex-versions";  // здесь git, main.tex
 
-    private final DocumentService documentService;
-    private final UserService userServiceImpl;
+    private final UserService userService;
 
     @Autowired
-    public GitService(DocumentService documentService, UserService userServiceImpl) {
-        this.documentService = documentService;
-        this.userServiceImpl = userServiceImpl;
+    public GitService( UserService userService) {
+        this.userService = userService;
     }
 
 
@@ -119,7 +117,7 @@ public class GitService {
             git.add().addFilepattern("main.tex").call();
 
             commit =    git.commit()
-                    .setMessage("Document updated")
+                    .setMessage("Внесены изменения")
                     .setAuthor(authorName, authorName + "@editor.local")  // любой email для Git
                     .call();
 
@@ -198,8 +196,8 @@ public class GitService {
     }
     public CommitInfo restoreToCommit(Long documentId, String commitId, Authentication authentication) throws IOException,GitAPIException {
         File repoPath = new File(sourcePath, documentId.toString());
-        Long userId = documentService.getCurrentUserId(authentication);
-        String username = userServiceImpl.findById(userId).getUsername();
+        Long userId = userService.getCurrentUserId(authentication);
+        String username = userService.findById(userId).getUsername();
         RevCommit commited;
         try (Git git = Git.open(repoPath)) {
             Repository repository = git.getRepository(); // возвращаем объект для путешенствия по коммитам и деревьям
@@ -207,7 +205,7 @@ public class GitService {
             ObjectId commitObjectId = repository.resolve(commitId); // из сокращенного айди, который есть в log получаем полный, с уоторым можно путешествовать по системе
             try (RevWalk revWalk = new RevWalk(repository)) {  // reyWalk позволяет путешестовать по коммитам
                 RevCommit commit = revWalk.parseCommit(commitObjectId); // берем коммит за которым мы обратились
-                revWalk.parseBody(commit);
+                revWalk.parseBody(commit);// получаем все данные об этом коммите
                 RevTree tree = commit.getTree();  // Revtree позволяет ходить по всем файлам внутри коммита(в нашем случае получить доступ к файлу .tex
                 // Ищем файл main.tex в этом коммите
                 try (TreeWalk treeWalk = new TreeWalk(repository)) {
@@ -233,7 +231,7 @@ public class GitService {
                     // Делаем новый коммит
                     git.add().addFilepattern("main.tex").call();
                     commited = git.commit()
-                            .setMessage("Откат к версии " + commitId)
+                            .setMessage("Возврат")
                             .setAuthor(username, username + "@editor.local")
                             .call();
                 }
