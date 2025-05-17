@@ -48,9 +48,19 @@ public class GitService {
 
 
     public void initializeGitWithFirstCommit(Long documentId, String content, String authorName) throws GitAPIException, IOException {
-        initRepo(documentId);
-        commitDocument(content, documentId, authorName);
-    }
+         try (Git git = initRepo(documentId)){
+             commitDocument(content, documentId, authorName);
+             String branchName = "user-" + authorName;
+            if (git.getRepository().findRef(branchName) == null) {
+
+                git.branchCreate().setName(branchName).call();
+            }
+                git.checkout().setName(branchName).call();
+
+
+            }
+        }
+
 
 
     public String getLastVersionContent(Long documentId) throws IOException {
@@ -296,10 +306,11 @@ public class GitService {
                 .build();
     }
 
-    public CommitInfo commitToUserBranch(Long documentId , String texContent,String authorName )throws IOException,GitAPIException {
+    public CommitInfo commitToUserBranch(String texContent ,Long documentId ,String authorName )throws IOException,GitAPIException {
         RevCommit commit;
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         String branchName = "user-" + authorName;
+
         try (Git git = Git.open(repoPath.toFile())) {
             if (git.getRepository().findRef(branchName) == null) {
 
