@@ -5,6 +5,9 @@ import com.example.demo.service.DocumentService;
 import com.example.demo.service.UserService;
 import com.example.demo.service.impl.UserServiceImpl;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.api.errors.InvalidRefNameException;
+import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
+import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
 import org.eclipse.jgit.lib.Repository;
@@ -39,7 +42,7 @@ public class GitService {
     private final UserService userService;
 
     @Autowired
-    public GitService( UserService userService) {
+    public GitService(UserService userService) {
         this.userService = userService;
     }
 
@@ -48,8 +51,6 @@ public class GitService {
         initRepo(documentId);
         commitDocument(content, documentId, authorName);
     }
-
-
 
 
     public String getLastVersionContent(Long documentId) throws IOException {
@@ -64,8 +65,6 @@ public class GitService {
         return Files.readString(textile);
 
 
-
-
     }
 
     // создаение и иницализирование репоитория под нужный документ
@@ -74,7 +73,6 @@ public class GitService {
 
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         ; // /latex-versions/documentId
-
 
 
         // Если папка не существует — создаём
@@ -116,7 +114,7 @@ public class GitService {
         try (Git git = Git.open(repoPath.toFile())) {
             git.add().addFilepattern("main.tex").call();
 
-            commit =    git.commit()
+            commit = git.commit()
                     .setMessage("Внесены изменения")
                     .setAuthor(authorName, authorName + "@editor.local")  // любой email для Git
                     .call();
@@ -124,7 +122,6 @@ public class GitService {
         }
         return convertCommitToInfo(commit);
     }
-
 
 
     public List<CommitInfo> getCommitHistory(Long documentId) throws IOException, GitAPIException {
@@ -157,17 +154,15 @@ public class GitService {
     }
 
 
+    public CommitInfo getPreviousCommit(Long documentId) throws GitAPIException, IOException {
 
-    public  CommitInfo getPreviousCommit(Long documentId) throws GitAPIException, IOException {
 
-
-        RevCommit currentCommit =  getCurrentCommit(documentId);
+        RevCommit currentCommit = getCurrentCommit(documentId);
 
 
         if (currentCommit.getParentCount() == 0) {
             throw new NoPreviousCommitException("Документ нельзя откатить — это первая версия");
         }
-
 
 
         RevCommit previousCommit;
@@ -181,20 +176,18 @@ public class GitService {
         return convertCommitToInfo(previousCommit);
 
 
-        }
+    }
 
     public CommitInfo restoreToPreviousCommit(Long documentId) throws IOException, GitAPIException {
 
         CommitInfo previousCommit = getPreviousCommit(documentId);
 
-        return  restoreToCommit(documentId, previousCommit.getId());
-
-
-
+        return restoreToCommit(documentId, previousCommit.getId());
 
 
     }
-    public CommitInfo restoreToCommit(Long documentId, String commitId, Authentication authentication) throws IOException,GitAPIException {
+
+    public CommitInfo restoreToCommit(Long documentId, String commitId, Authentication authentication) throws IOException, GitAPIException {
         File repoPath = new File(sourcePath, documentId.toString());
         Long userId = userService.getCurrentUserId(authentication);
         String username = userService.findById(userId).getUsername();
@@ -241,10 +234,9 @@ public class GitService {
         return convertCommitToInfo(commited);
 
 
-
-
     }
-    public CommitInfo restoreToCommit(Long documentId, String commitId) throws IOException,GitAPIException {
+
+    public CommitInfo restoreToCommit(Long documentId, String commitId) throws IOException, GitAPIException {
         File repoPath = new File(sourcePath, documentId.toString());
 
         RevCommit commited;
@@ -289,8 +281,7 @@ public class GitService {
         return convertCommitToInfo(commited);
     }
 
-    public CommitInfo convertCommitToInfo(RevCommit commit )
-    {
+    public CommitInfo convertCommitToInfo(RevCommit commit) {
         String message;
         try {
             message = commit.getShortMessage();
@@ -305,4 +296,32 @@ public class GitService {
                 .build();
     }
 
-}
+    public CommitInfo commitToUserBranch(Long documentId , String texContent,String authorName )throws IOException,GitAPIException {
+        RevCommit commit;
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        String branchName = "user-" + authorName;
+        try (Git git = Git.open(repoPath.toFile())) {
+            if (git.getRepository().findRef(branchName) == null) {
+
+                git.branchCreate().setName(branchName).call();
+            }
+            git.checkout().setName(branchName).call();
+
+            Path textile = repoPath.resolve("main.tex");
+            Files.writeString(textile, texContent);
+
+            git.add().addFilepattern("main.tex").call();
+
+             commit = git.commit()
+                    .setMessage("Внесены изменения")
+                    .setAuthor(authorName, authorName + "@editor.local")  // любой email для Git
+                    .call();
+
+        }
+        return convertCommitToInfo(commit);
+
+
+
+        }
+    }
+
