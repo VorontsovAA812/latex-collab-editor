@@ -48,18 +48,22 @@ public class GitService {
 
 
     public void initializeGitWithFirstCommit(Long documentId, String content, String authorName) throws GitAPIException, IOException {
-         try (Git git = initRepo(documentId)){
-             commitDocument(content, documentId, authorName);
-             String branchName = "user-" + authorName;
-            if (git.getRepository().findRef(branchName) == null) {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        Path mainTexPath = repoPath.resolve("main.tex");
 
-                git.branchCreate().setName(branchName).call();
-            }
-                git.checkout().setName(branchName).call();
+        try (Git git = initRepo(documentId)) {
+            Files.writeString(mainTexPath, ""); // Пустой или шаблон
+            git.add().addFilepattern("main.tex").call();
+            RevCommit initial = git.commit().setMessage("Initial commit")
+                    .setAuthor(authorName, authorName + "@editor.local")
+                    .call();
 
 
-            }
-        }
+
+
+
+            commitToUserBranch(content, documentId, authorName,initial);
+        }}
 
 
 
@@ -306,7 +310,7 @@ public class GitService {
                 .build();
     }
 
-    public CommitInfo commitToUserBranch(String texContent ,Long documentId ,String authorName )throws IOException,GitAPIException {
+    public CommitInfo commitToUserBranch(String texContent ,Long documentId ,String authorName, RevCommit initial )throws IOException,GitAPIException {
         RevCommit commit;
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         String branchName = "user-" + authorName;
@@ -314,7 +318,7 @@ public class GitService {
         try (Git git = Git.open(repoPath.toFile())) {
             if (git.getRepository().findRef(branchName) == null) {
 
-                git.branchCreate().setName(branchName).call();
+                git.branchCreate().setName(branchName).setStartPoint(initial.getId().getName()).call();
             }
             git.checkout().setName(branchName).call();
 
@@ -325,12 +329,38 @@ public class GitService {
 
              commit = git.commit()
                     .setMessage("Внесены изменения")
-                    .setAuthor(authorName, authorName + "@editor.local")  // любой email для Git
+                    .setAuthor(authorName, authorName + "@editor.local")
+                     // любой email для Git
                     .call();
 
         }
         return convertCommitToInfo(commit);
+        }
+        public CommitInfo commitToUserBranch(String texContent ,Long documentId ,String authorName )throws IOException,GitAPIException {
+            RevCommit commit;
+            Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+            String branchName = "user-" + authorName;
 
+            try (Git git = Git.open(repoPath.toFile())) {
+                if (git.getRepository().findRef(branchName) == null) {
+
+                    git.branchCreate().setName(branchName).call();
+                }
+                git.checkout().setName(branchName).call();
+
+                Path textile = repoPath.resolve("main.tex");
+                Files.writeString(textile, texContent);
+
+                git.add().addFilepattern("main.tex").call();
+
+                commit = git.commit()
+                        .setMessage("Внесены изменения")
+                        .setAuthor(authorName, authorName + "@editor.local")
+                        // любой email для Git
+                        .call();
+
+            }
+            return convertCommitToInfo(commit);
 
 
         }

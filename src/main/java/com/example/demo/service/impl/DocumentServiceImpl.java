@@ -213,7 +213,12 @@ public class DocumentServiceImpl implements DocumentService {
         documentRepo.save(document);
 
         User  user2= userService.findById(userId);
-        gitService.commitToUserBranch(updateDocumentRequest.getContent(),id,user2.getUsername());
+        try {
+            gitService.commitToUserBranch(updateDocumentRequest.getContent(), id, user2.getUsername());
+        } catch (Exception ex) {
+            log.warn("Не удалось закоммитить изменения в Git для документа {}: {}", id, ex.getMessage());
+        }
+
         return convertDocumentToResponse(document,true);
 
     }
