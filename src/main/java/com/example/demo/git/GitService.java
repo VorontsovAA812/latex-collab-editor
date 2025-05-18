@@ -58,12 +58,20 @@ public class GitService {
                     .setAuthor(authorName, authorName + "@editor.local")
                     .call();
 
+            if (git.getRepository().findRef("master") == null) {
+                git.branchCreate().setName("master").setStartPoint(initial).call();
+            }
+            git.checkout().setName("master").call();
 
+            // Теперь создаём ветку пользователя от master
+            String branchName = "user-" + authorName;
+            git.branchCreate().setName(branchName).setStartPoint("master").call();
+            git.checkout().setName(branchName).call();
 
+            commitToUserBranch(content, documentId, authorName); // первый пользовательский коммит
 
-
-            commitToUserBranch(content, documentId, authorName,initial);
-        }}
+        }
+    }
 
 
 
@@ -344,7 +352,8 @@ public class GitService {
             try (Git git = Git.open(repoPath.toFile())) {
                 if (git.getRepository().findRef(branchName) == null) {
 
-                    git.branchCreate().setName(branchName).call();
+                    git.branchCreate().setName(branchName).setStartPoint("master")  // 👈 важно!
+                            .call();
                 }
                 git.checkout().setName(branchName).call();
 
