@@ -2,8 +2,10 @@ package com.example.demo.git;
 
 
 
+import com.example.demo.service.UserService;
 import lombok.RequiredArgsConstructor;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -17,6 +19,7 @@ import java.util.List;
 public class GitController {
 
     private final GitService gitService;
+    private final UserService userService;
 
     @PostMapping("/{documentId}/init")
     public ResponseEntity<GitResponse> initRepo(@PathVariable Long documentId) throws GitAPIException, IOException {
@@ -39,6 +42,22 @@ public class GitController {
                     .documentId(request.getDocumentId())
                     .commitId("Идентификатор версии :"+commitInfo.getId())
                     .build());
+
+    }
+    @PostMapping("/documents/{documentId}/merge")
+    public ResponseEntity<?> mergeUserBranchToMaster(@PathVariable Long documentId, Authentication authentication) throws GitAPIException, IOException {
+
+            Long userId = userService.getCurrentUserId(authentication);
+            String username = userService.findById(userId).getUsername();
+
+            boolean success = gitService.mergeUserBranchToMaster(documentId, username);
+
+            if (success) {
+                return ResponseEntity.ok("Слияние прошло успешно.");
+            } else {
+                return ResponseEntity.status(HttpStatus.CONFLICT)
+                        .body("Обнаружены конфликты при слиянии. Разрешите вручную.");
+            }
 
     }
 

@@ -4,6 +4,8 @@ package com.example.demo.git;
 import com.example.demo.service.DocumentService;
 import com.example.demo.service.UserService;
 import com.example.demo.service.impl.UserServiceImpl;
+import org.eclipse.jgit.api.MergeCommand;
+import org.eclipse.jgit.api.MergeResult;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.api.errors.InvalidRefNameException;
 import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
@@ -374,5 +376,26 @@ public class GitService {
 
         }
 
-    }
+        public boolean  mergeUserBranchToMaster(Long documentId,String authorName) throws IOException,GitAPIException
+        {
+            Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+            String branchName = "user-" + authorName;
+            try( Git git = Git.open(repoPath.toFile()))
+            {
+                git.checkout().setName("master").call();
+
+                MergeResult result = git.merge()
+                        .include(git.getRepository().findRef(branchName))
+                        .setCommit(true)
+                        .setFastForward(MergeCommand.FastForwardMode.NO_FF)
+                        .setMessage("Merge ветки " + branchName + " в master")
+                        .call();
+                return result.getMergeStatus().isSuccessful();
+
+
+            }
+
+        }
+
+}
 
