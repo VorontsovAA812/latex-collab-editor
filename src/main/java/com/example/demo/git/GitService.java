@@ -52,28 +52,72 @@ public class GitService {
     public void initializeGitWithFirstCommit(Long documentId, String content, String authorName) throws GitAPIException, IOException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         Path mainTexPath = repoPath.resolve("main.tex");
+        String userBranch = "user-" + authorName;
 
         try (Git git = initRepo(documentId)) {
-            Files.writeString(mainTexPath, ""); // Пустой или шаблон
+            // Пишем содержимое сразу
+            Files.writeString(mainTexPath, content);
             git.add().addFilepattern("main.tex").call();
-            RevCommit initial = git.commit().setMessage("Initial commit")
+
+            // Первый коммит от пользователя
+            RevCommit commit = git.commit()
+                    .setMessage("Первый коммит от автора")
                     .setAuthor(authorName, authorName + "@editor.local")
                     .call();
 
-            if (git.getRepository().findRef("master") == null) {
-                git.branchCreate().setName("master").setStartPoint(initial).call();
-            }
-            git.checkout().setName("master").call();
+            // Создаём ветку пользователя из этого коммита
+            git.branchCreate()
+                    .setName(userBranch)
+                    .setStartPoint(commit)
+                    .call();
 
-            // Теперь создаём ветку пользователя от master
-            String branchName = "user-" + authorName;
-            git.branchCreate().setName(branchName).setStartPoint("master").call();
-            git.checkout().setName(branchName).call();
-
-            commitToUserBranch(content, documentId, authorName); // первый пользовательский коммит
-
+            // Переключаемся в ветку пользователя
+            git.checkout().setName(userBranch).call();
         }
     }
+    public boolean hasMainBranch(Long documentId) throws IOException {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        try (Git git = Git.open(repoPath.toFile())) {
+            if(git.getRepository().findRef("main")!=null){
+                return true;
+            }
+            else{
+                return false;
+            }
+
+        }
+
+    }
+    public boolean createMainFromUserBranch(Long documentId,Authentication authentication) throws IOException, GitAPIException {
+        Long userId = userService.getCurrentUserId(authentication);
+        String authorName= userService.findById(userId).getUsername();
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        String userBranch = "user-" + authorName;
+        String mainBranch = "main";
+
+        try (Git git = Git.open(repoPath.toFile())) {
+            // Проверка: существует ли уже main
+            if (git.getRepository().findRef(mainBranch) != null) {
+                throw new IllegalStateException("main уже существует. Утверждение уже было.");
+            }
+
+            // Убедимся, что пользовательская ветка есть
+            if (git.getRepository().findRef(userBranch) == null) {
+                throw new RefNotFoundException("Ветка " + userBranch + " не найдена.");
+            }
+
+            // Создаём ветку main из userBranch
+            git.checkout().setName(userBranch).call();
+            git.branchCreate().setName(mainBranch).setStartPoint(userBranch).call();
+
+            // Возвращаемся в main
+            git.checkout().setName(mainBranch).call();
+
+            return true;
+        }
+    }
+
+
 
 
 
@@ -354,8 +398,11 @@ public class GitService {
             try (Git git = Git.open(repoPath.toFile())) {
                 if (git.getRepository().findRef(branchName) == null) {
 
-                    git.branchCreate().setName(branchName).setStartPoint("master")  // 👈 важно!
+                    git.branchCreate()
+                            .setName(branchName)
+                            .setStartPoint("HEAD") // 👈 безопасный выбор, если `main` ещё не создан
                             .call();
+
                 }
                 git.checkout().setName(branchName).call();
 

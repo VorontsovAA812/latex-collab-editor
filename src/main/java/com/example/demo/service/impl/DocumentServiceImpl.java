@@ -204,8 +204,12 @@ public class DocumentServiceImpl implements DocumentService {
 
         Document document = documentRepo.findById(id)
                 .orElseThrow(() -> new BusinessException("Документ не найден"));
+        boolean isAuthor = userId.equals(document.getOwnerUser().getId());
 
-
+        // Запрет для НЕ автора редактировать до появления main
+        if (!isAuthor && !gitService.hasMainBranch(id)) {
+            throw new BusinessException("Нельзя редактировать документ до утверждения автором.");
+        }
 
         document.setTitle(updateDocumentRequest.getTitle());
         document.setUpdatedAt(Instant.now());

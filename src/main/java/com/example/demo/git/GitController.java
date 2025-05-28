@@ -32,6 +32,21 @@ public class GitController {
 
 
     }
+    @PostMapping("/{documentId}/reference")
+    public ResponseEntity<GitResponse> makeReference(@PathVariable Long documentId,Authentication authentication) throws GitAPIException, IOException {
+
+
+        gitService.createMainFromUserBranch(documentId,authentication);
+        GitResponse response = GitResponse.builder()
+                .message("Главная ветка для документа " + documentId + " создана успешно")
+                .documentId(documentId)
+                .build();
+
+        return ResponseEntity.ok(response);
+    }
+
+
+
 
     @PostMapping("/commit")
     public ResponseEntity<GitResponse> commitDocument(@RequestBody LatexCommitRequest request) throws GitAPIException, IOException {

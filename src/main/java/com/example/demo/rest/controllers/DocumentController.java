@@ -64,6 +64,7 @@ public class DocumentController {
     }
 
 
+
     @PostMapping("/{documentId}/invite/{username}")
     public ResponseEntity<UserDto> inviteUserToDocument(@PathVariable Long documentId, @PathVariable String username, Authentication authentication) {
 
