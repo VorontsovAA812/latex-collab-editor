@@ -400,7 +400,7 @@ public class GitService {
 
                     git.branchCreate()
                             .setName(branchName)
-                            .setStartPoint("HEAD") // 👈 безопасный выбор, если `main` ещё не создан
+                            .setStartPoint("main") // 👈 безопасный выбор, если `main` ещё не создан
                             .call();
 
                 }
