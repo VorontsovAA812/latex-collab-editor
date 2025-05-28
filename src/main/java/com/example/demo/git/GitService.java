@@ -422,8 +422,49 @@ public class GitService {
 
 
         }
+    public boolean mergeUserBranchToMain(Long documentId, String authorName) throws IOException, GitAPIException {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        String userBranch = "user-" + authorName;
+        String mainBranch = "main";
 
-        public boolean  mergeUserBranchToMaster(Long documentId,String authorName) throws IOException,GitAPIException
+        try (Git git = Git.open(repoPath.toFile())) {
+            // 1. Переключаемся на ветку пользователя
+            git.checkout().setName(userBranch).call();
+
+            // 2. Подтягиваем изменения из main в ветку пользователя
+            MergeResult pullResult = git.merge()
+                    .include(git.getRepository().findRef(mainBranch))
+                    .setFastForward(MergeCommand.FastForwardMode.NO_FF)
+                    .setCommit(true)
+                    .setMessage("Подтягивание изменений из main в " + userBranch)
+                    .call();
+
+            if (pullResult.getMergeStatus().equals(MergeResult.MergeStatus.CONFLICTING)) {
+                System.out.println("Конфликты при подтягивании main → user: " + pullResult.getConflicts());
+                // Но не прерываем процесс
+            }
+
+            // 3. Переключаемся на main
+            git.checkout().setName(mainBranch).call();
+
+            // 4. Сливаем ветку пользователя в main
+            MergeResult finalMerge = git.merge()
+                    .include(git.getRepository().findRef(userBranch))
+                    .setFastForward(MergeCommand.FastForwardMode.NO_FF)
+                    .setCommit(true)
+                    .setMessage("Слияние ветки " + userBranch + " в main")
+                    .call();
+
+            if (finalMerge.getMergeStatus().equals(MergeResult.MergeStatus.CONFLICTING)) {
+                System.out.println(" Конфликты при слиянии user → main: " + finalMerge.getConflicts());
+            }
+
+            return finalMerge.getMergeStatus().isSuccessful(); // можно вернуть CONFLICTING, MERGED, FAST_FORWARD и т.п.
+        }
+    }
+
+
+    public boolean  mergeUserBranchToMaster(Long documentId,String authorName) throws IOException,GitAPIException
         {
             Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
             String branchName = "user-" + authorName;

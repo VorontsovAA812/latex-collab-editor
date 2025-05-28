@@ -65,7 +65,7 @@ public class GitController {
             Long userId = userService.getCurrentUserId(authentication);
             String username = userService.findById(userId).getUsername();
 
-            boolean success = gitService.mergeUserBranchToMaster(documentId, username);
+            boolean success = gitService.mergeUserBranchToMain(documentId, username);
 
             if (success) {
                 return ResponseEntity.ok("Слияние прошло успешно.");
