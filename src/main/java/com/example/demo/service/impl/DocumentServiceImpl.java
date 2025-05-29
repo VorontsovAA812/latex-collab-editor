@@ -210,13 +210,14 @@ public class DocumentServiceImpl implements DocumentService {
         if (!isAuthor && !gitService.hasMainBranch(id)) {
             throw new BusinessException("Нельзя редактировать документ до утверждения автором.");
         }
+        User  user2= userService.findById(userId);
+
 
         document.setTitle(updateDocumentRequest.getTitle());
         document.setUpdatedAt(Instant.now());
 
         documentRepo.save(document);
 
-        User  user2= userService.findById(userId);
         try {
             gitService.commitToUserBranch(updateDocumentRequest.getContent(), id, user2.getUsername());
         } catch (Exception ex) {

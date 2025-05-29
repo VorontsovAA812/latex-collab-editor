@@ -32,8 +32,11 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static java.nio.file.Files.readString;
+import static java.util.Locale.filter;
 
 
 @Service
@@ -422,6 +425,8 @@ public class GitService {
 
 
         }
+
+
     public boolean mergeUserBranchToMain(Long documentId, String authorName) throws IOException, GitAPIException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         String userBranch = "user-" + authorName;
@@ -485,5 +490,56 @@ public class GitService {
 
         }
 
+    public String createNewUserBranchFromMain(Long documentId, String username) throws IOException, GitAPIException {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        try (Git git = Git.open(repoPath.toFile()))
+        {
+            if( git.getRepository().findRef("main")==null)
+            {
+                throw new IllegalStateException("main не существует — нельзя создать ветку.");
+
+            }
+
+            String newBranchName =generateSufForUserBranch(documentId, username);
+
+            git.checkout().setName("main").call();
+            git.branchCreate().setName(newBranchName).setStartPoint("main").call();
+            git.checkout().setName(newBranchName).call();
+
+            return  newBranchName;
+        }
+
+
+
+    }
+
+    public String generateSufForUserBranch(Long documentId, String username) throws IOException {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        try (Git git = Git.open(repoPath.toFile())) {
+            Set<String> branchNames = git.branchList().call().stream()
+                    .map(ref -> ref.getName().replace("refs/heads/", ""))
+                    .filter(name -> name.startsWith("user-" + username))
+                    .collect(Collectors.toSet());
+
+            if (!branchNames.contains("user-" + username)) {
+                return "user-" + username;
+            }
+
+            int suffix = 2;
+            while (branchNames.contains("user-" + username + "-v" + suffix)) {
+                suffix++;
+            }
+            return "user-" + username + "-v" + suffix;
+        } catch (GitAPIException e) {
+            throw new IOException("Ошибка при получении списка веток", e);
+        }
+    }
+
+
+
+
 }
+
+
+
 
