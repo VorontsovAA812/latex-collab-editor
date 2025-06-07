@@ -1,6 +1,11 @@
 package com.example.demo.git;
 
 
+import com.example.demo.domain.Document;
+import com.example.demo.domain.User;
+import com.example.demo.domain.UserDocument;
+import com.example.demo.domain.UserDocumentId;
+import com.example.demo.repos.UserDocumentRepo;
 import com.example.demo.service.DocumentService;
 import com.example.demo.service.UserService;
 import com.example.demo.service.impl.UserServiceImpl;
@@ -45,10 +50,14 @@ public class GitService {
     private final String sourcePath = "./latex-versions";  // здесь git, main.tex
 
     private final UserService userService;
+    private final UserDocumentRepo userDocumentRepository;
+    private final DocumentService documentService;
 
     @Autowired
-    public GitService(UserService userService) {
+    public GitService(UserService userService,DocumentService documentService,UserDocumentRepo userDocumentRepository) {
         this.userService = userService;
+        this.documentService= documentService;
+        this.userDocumentRepository=userDocumentRepository;
     }
 
 
@@ -393,38 +402,62 @@ public class GitService {
         }
         return convertCommitToInfo(commit);
         }
-        public CommitInfo commitToUserBranch(String texContent ,Long documentId ,String authorName )throws IOException,GitAPIException {
-            RevCommit commit;
-            Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
-            String branchName = "user-" + authorName;
+    public CommitInfo commitToUserBranch(String texContent, Long documentId, String authorName) throws IOException, GitAPIException {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
 
-            try (Git git = Git.open(repoPath.toFile())) {
-                if (git.getRepository().findRef(branchName) == null) {
+        Long userId = userService.findByUsername(authorName).getId();
+        UserDocumentId compositeId = new UserDocumentId(userId, documentId);
 
-                    git.branchCreate()
-                            .setName(branchName)
-                            .setStartPoint("main") // 👈 безопасный выбор, если `main` ещё не создан
-                            .call();
+        // Получаем текущую запись user_document или создаём новую
+        UserDocument userDocument = userDocumentRepository.findById(compositeId)
+                .orElseGet(() -> {
+                    try {
+                        // Получаем сущности User и Document (если нужно, замените на сервисные вызовы)
+                        User user = userService.findById(userId);
+                        Document document = documentService.findById(documentId); // добавьте, если ещё нет
 
-                }
-                git.checkout().setName(branchName).call();
+                        String newBranch = createNewUserBranchFromMain(documentId, authorName);
 
-                Path textile = repoPath.resolve("main.tex");
-                Files.writeString(textile, texContent);
+                        UserDocument newUserDoc = new UserDocument();
+                        newUserDoc.setId(compositeId);
+                        newUserDoc.setUser(user);
+                        newUserDoc.setDocument(document);
+                        newUserDoc.setPermissionLevel("write");
+                        newUserDoc.setAddedAt(Instant.now());
+                        newUserDoc.setBranch_name(newBranch);
 
-                git.add().addFilepattern("main.tex").call();
+                        return userDocumentRepository.save(newUserDoc);
+                    } catch (Exception e) {
+                        throw new RuntimeException("Не удалось создать UserDocument и ветку", e);
+                    }
+                });
 
-                commit = git.commit()
-                        .setMessage("Внесены изменения")
-                        .setAuthor(authorName, authorName + "@editor.local")
-                        // любой email для Git
-                        .call();
+        String branchName = userDocument.getBranch_name();
 
+        try (Git git = Git.open(repoPath.toFile())) {
+            // Если ветка не существует в Git — пересоздаём
+            if (git.getRepository().findRef(branchName) == null) {
+                branchName = createNewUserBranchFromMain(documentId, authorName);
+                userDocument.setBranch_name(branchName);
+                userDocumentRepository.save(userDocument);
             }
+
+            git.checkout().setName(branchName).call();
+
+            Path texFile = repoPath.resolve("main.tex");
+            Files.writeString(texFile, texContent);
+
+            git.add().addFilepattern("main.tex").call();
+
+            RevCommit commit = git.commit()
+                    .setMessage("Внесены изменения")
+                    .setAuthor(authorName, authorName + "@editor.local")
+                    .call();
+
             return convertCommitToInfo(commit);
-
-
         }
+    }
+
 
 
     public String mergeUserBranchToMain(Long documentId, String authorName) throws IOException, GitAPIException {
@@ -462,6 +495,8 @@ public class GitService {
 
             if (finalMerge.getMergeStatus().isSuccessful()) {
                 String newBranchName = createNewUserBranchFromMain(documentId, authorName);
+                 Long userId = userService.findByUsername(authorName).getId();
+                userDocumentRepository.updateBranchName(userId, documentId, newBranchName);
                 System.out.println("Создана новая ветка: " + newBranchName);
                 return newBranchName;
             } else {

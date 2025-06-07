@@ -1,5 +1,6 @@
 package com.example.demo.service;
 
+import com.example.demo.domain.Document;
 import com.example.demo.rest.dto.DocumentDtos.ContentRequestDto;
 import com.example.demo.rest.dto.DocumentDtos.DocumentListDTO;
 import com.example.demo.rest.dto.DocumentDtos.DocumentResponse;
@@ -14,7 +15,7 @@ import java.util.List;
 public interface DocumentService {
     Long createDocument(NewDocumentRequest request, Authentication authentication) throws GitAPIException, IOException;
 
-
+    Document findById(Long id);
     List<DocumentListDTO> getDocumentsForCurrentUser(Authentication authentication);
 
     DocumentResponse findById(Long id, boolean includeContent) throws IOException;
