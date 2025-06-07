@@ -41,7 +41,7 @@ public class UserDocument {
     @Column(name = "added_at", nullable = false)
     private Instant addedAt;
 
-    @Column(name = "branchName", nullable = false)
+    @Column(name = "branchName")
     private String branchName;
 
 
