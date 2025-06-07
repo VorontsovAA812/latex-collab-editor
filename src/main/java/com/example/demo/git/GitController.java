@@ -65,14 +65,11 @@ public class GitController {
             Long userId = userService.getCurrentUserId(authentication);
             String username = userService.findById(userId).getUsername();
 
-            boolean success = gitService.mergeUserBranchToMain(documentId, username);
+            gitService.mergeUserBranchToMain(documentId, username);
 
-            if (success) {
-                return ResponseEntity.ok("Слияние прошло успешно.");
-            } else {
-                return ResponseEntity.status(HttpStatus.CONFLICT)
-                        .body("Обнаружены конфликты при слиянии. Разрешите вручную.");
-            }
+
+                return ResponseEntity.ok( gitService.mergeUserBranchToMain(documentId, username));
+
 
     }
 

@@ -427,7 +427,7 @@ public class GitService {
         }
 
 
-    public boolean mergeUserBranchToMain(Long documentId, String authorName) throws IOException, GitAPIException {
+    public String mergeUserBranchToMain(Long documentId, String authorName) throws IOException, GitAPIException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         String userBranch = "user-" + authorName;
         String mainBranch = "main";
@@ -460,11 +460,13 @@ public class GitService {
                     .setMessage("Слияние ветки " + userBranch + " в main")
                     .call();
 
-            if (finalMerge.getMergeStatus().equals(MergeResult.MergeStatus.CONFLICTING)) {
-                System.out.println(" Конфликты при слиянии user → main: " + finalMerge.getConflicts());
+            if (finalMerge.getMergeStatus().isSuccessful()) {
+                String newBranchName = createNewUserBranchFromMain(documentId, authorName);
+                System.out.println("Создана новая ветка: " + newBranchName);
+                return newBranchName;
+            } else {
+                throw new IllegalStateException("Merge неуспешен: " + finalMerge.getMergeStatus());
             }
-
-            return finalMerge.getMergeStatus().isSuccessful(); // можно вернуть CONFLICTING, MERGED, FAST_FORWARD и т.п.
         }
     }
 
@@ -512,21 +514,21 @@ public class GitService {
 
 
     }
-
     public String generateSufForUserBranch(Long documentId, String username) throws IOException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         try (Git git = Git.open(repoPath.toFile())) {
-            Set<String> branchNames = git.branchList().call().stream()
+            Set<String> versionedBranches = git.branchList().call().stream()
                     .map(ref -> ref.getName().replace("refs/heads/", ""))
-                    .filter(name -> name.startsWith("user-" + username))
+                    .filter(name -> name.matches("user-" + username + "-v\\d+"))
                     .collect(Collectors.toSet());
 
-            if (!branchNames.contains("user-" + username)) {
+            // Если базовая ветка ещё не существует — создаём user-<имя>
+            if (git.getRepository().findRef("user-" + username) == null) {
                 return "user-" + username;
             }
 
-            int suffix = 2;
-            while (branchNames.contains("user-" + username + "-v" + suffix)) {
+            int suffix = 1;
+            while (versionedBranches.contains("user-" + username + "-v" + suffix)) {
                 suffix++;
             }
             return "user-" + username + "-v" + suffix;
@@ -534,6 +536,9 @@ public class GitService {
             throw new IOException("Ошибка при получении списка веток", e);
         }
     }
+
+
+
 
 
 
