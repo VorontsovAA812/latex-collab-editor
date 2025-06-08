@@ -418,6 +418,7 @@ public class GitService {
         }
         return convertCommitToInfo(commit);
         }
+
     public CommitInfo commitToUserBranch(String texContent, Long documentId, String authorName) throws IOException, GitAPIException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         Long userId = userService.findByUsername(authorName).getId();
@@ -430,6 +431,8 @@ public class GitService {
                     try {
                         if (hasMainBranch(documentId)) {
                             newBranch = createNewUserBranchFromMain(documentId, authorName);
+                        } else if (hasAnyCommit(documentId)) {
+                            newBranch = createBranchFromFirstCommit(documentId, authorName);
                         } else {
                             newBranch = createInitialUserBranch(documentId, authorName);
                         }
@@ -449,17 +452,17 @@ public class GitService {
                     userDoc.setAddedAt(Instant.now());
 
                     userDocumentRepository.save(userDoc);
-
                     return newBranch;
                 });
 
         try (Git git = Git.open(repoPath.toFile())) {
-            // Если ветка есть в БД, но не в Git — создаём заново
+            // Если ветка есть в БД, но не в Git — пересоздаём
             if (git.getRepository().findRef(branchName) == null) {
                 branchName = hasMainBranch(documentId)
                         ? createNewUserBranchFromMain(documentId, authorName)
+                        : hasAnyCommit(documentId)
+                        ? createBranchFromFirstCommit(documentId, authorName)
                         : createInitialUserBranch(documentId, authorName);
-
                 userDocumentRepository.updateBranchName(userId, documentId, branchName);
             }
 
@@ -467,6 +470,9 @@ public class GitService {
 
             Path texFile = repoPath.resolve("main.tex");
             Files.writeString(texFile, texContent);
+
+            System.out.println("main.tex content hash: " + Files.readString(texFile).hashCode());
+            System.out.println("Коммит в ветку " + branchName);
 
             git.add().addFilepattern("main.tex").call();
 
@@ -478,6 +484,37 @@ public class GitService {
             return convertCommitToInfo(commit);
         }
     }
+    public boolean hasAnyCommit(Long documentId) throws IOException {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        try (Git git = Git.open(repoPath.toFile())) {
+            return git.log().setMaxCount(1).call().iterator().hasNext();
+        } catch (GitAPIException e) {
+            throw new IOException("Ошибка при проверке наличия коммитов", e);
+        }
+    }
+    public String createBranchFromFirstCommit(Long documentId, String username) throws IOException, GitAPIException {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        try (Git git = Git.open(repoPath.toFile())) {
+            Iterable<RevCommit> commits = git.log().call();
+            RevCommit firstCommit = null;
+            for (RevCommit c : commits) {
+                firstCommit = c; // итерация вернёт сначала новые, в конце — первый
+            }
+            if (firstCommit == null) {
+                throw new IllegalStateException("Нет ни одного коммита в репозитории");
+            }
+
+            String branchName = "user-" + username;
+            git.checkout()
+                    .setStartPoint(firstCommit.getName())
+                    .setName(branchName)
+                    .setCreateBranch(true)
+                    .call();
+
+            return branchName;
+        }
+    }
+
 
 
     public String mergeUserBranchToMain(Long documentId, String authorName) throws IOException, GitAPIException {
