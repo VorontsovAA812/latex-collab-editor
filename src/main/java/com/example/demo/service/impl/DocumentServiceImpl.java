@@ -20,6 +20,7 @@ import org.eclipse.jgit.api.errors.GitAPIException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
@@ -49,7 +50,7 @@ public class DocumentServiceImpl implements DocumentService {
     private  final SecurityUtils securityUtils;
 
     @Autowired
-    public DocumentServiceImpl(DocumentRepo documentRepo, UserService userService, UserDocumentRepo userDocumentRepo,SecurityUtils securityUtils, GitService gitService ) {
+    public DocumentServiceImpl(DocumentRepo documentRepo, UserService userService, UserDocumentRepo userDocumentRepo,SecurityUtils securityUtils,@Lazy GitService gitService ) {
         this.documentRepo = documentRepo;
         this.userService = userService;
         this.userDocumentRepo = userDocumentRepo;
