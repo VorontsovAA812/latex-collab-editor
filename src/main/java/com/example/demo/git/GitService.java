@@ -105,13 +105,19 @@ public class GitService {
         String branchName = "user-" + username;
 
         try (Git git = Git.open(repoPath.toFile())) {
-            // Создаём ветку от текущей HEAD (обычно master)
-            git.checkout()
-                    .setCreateBranch(true)
-                    .setStartPoint("HEAD")
-                    .setName(branchName)
-                    .call();
-
+            if (git.getRepository().findRef(branchName) == null) {
+                // Ветка не существует — создаём
+                git.checkout()
+                        .setCreateBranch(true)
+                        .setStartPoint("HEAD")
+                        .setName(branchName)
+                        .call();
+            } else {
+                // Ветка уже есть — просто переключаемся
+                git.checkout()
+                        .setName(branchName)
+                        .call();
+            }
             return branchName;
         }
     }
@@ -418,12 +424,16 @@ public class GitService {
         }
         return convertCommitToInfo(commit);
         }
-
     public CommitInfo commitToUserBranch(String texContent, Long documentId, String authorName) throws IOException, GitAPIException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         Long userId = userService.findByUsername(authorName).getId();
 
-        // Получаем или создаём актуальную ветку
+        // 1. Если репозиторий не инициализирован — создаём с первым коммитом
+        if (!Files.exists(repoPath.resolve(".git"))) {
+            initializeGitWithFirstCommit(documentId, texContent, authorName);
+        }
+
+        // 2. Получаем или создаём ветку
         String branchName = userDocumentRepository.findByUserIdAndDocumentId(userId, documentId)
                 .map(UserDocument::getBranchName)
                 .orElseGet(() -> {
@@ -431,8 +441,6 @@ public class GitService {
                     try {
                         if (hasMainBranch(documentId)) {
                             newBranch = createNewUserBranchFromMain(documentId, authorName);
-                        } else if (hasAnyCommit(documentId)) {
-                            newBranch = createBranchFromFirstCommit(documentId, authorName);
                         } else {
                             newBranch = createInitialUserBranch(documentId, authorName);
                         }
@@ -452,27 +460,26 @@ public class GitService {
                     userDoc.setAddedAt(Instant.now());
 
                     userDocumentRepository.save(userDoc);
+
                     return newBranch;
                 });
 
+        // 3. Работаем с Git-репозиторием
         try (Git git = Git.open(repoPath.toFile())) {
-            // Если ветка есть в БД, но не в Git — пересоздаём
+            // Если ветка в БД есть, но в Git нет — создаём заново
             if (git.getRepository().findRef(branchName) == null) {
                 branchName = hasMainBranch(documentId)
                         ? createNewUserBranchFromMain(documentId, authorName)
-                        : hasAnyCommit(documentId)
-                        ? createBranchFromFirstCommit(documentId, authorName)
                         : createInitialUserBranch(documentId, authorName);
                 userDocumentRepository.updateBranchName(userId, documentId, branchName);
             }
 
+            // Переключаемся на ветку
             git.checkout().setName(branchName).call();
 
+            // Обновляем содержимое файла
             Path texFile = repoPath.resolve("main.tex");
             Files.writeString(texFile, texContent);
-
-            System.out.println("main.tex content hash: " + Files.readString(texFile).hashCode());
-            System.out.println("Коммит в ветку " + branchName);
 
             git.add().addFilepattern("main.tex").call();
 
@@ -484,6 +491,8 @@ public class GitService {
             return convertCommitToInfo(commit);
         }
     }
+
+
     public boolean hasAnyCommit(Long documentId) throws IOException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         try (Git git = Git.open(repoPath.toFile())) {
