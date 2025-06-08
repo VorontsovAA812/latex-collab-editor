@@ -100,6 +100,22 @@ public class GitService {
         }
 
     }
+    public String createInitialUserBranch(Long documentId, String username) throws IOException, GitAPIException {
+        Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
+        String branchName = "user-" + username;
+
+        try (Git git = Git.open(repoPath.toFile())) {
+            // Создаём ветку от текущей HEAD (обычно master)
+            git.checkout()
+                    .setCreateBranch(true)
+                    .setStartPoint("HEAD")
+                    .setName(branchName)
+                    .call();
+
+            return branchName;
+        }
+    }
+
     public boolean createMainFromUserBranch(Long documentId,Authentication authentication) throws IOException, GitAPIException {
         Long userId = userService.getCurrentUserId(authentication);
         String authorName= userService.findById(userId).getUsername();
@@ -464,10 +480,8 @@ public class GitService {
         String mainBranch = "main";
 
         try (Git git = Git.open(repoPath.toFile())) {
-            // 1. Переключаемся на ветку пользователя
             git.checkout().setName(userBranch).call();
 
-            // 2. Подтягиваем изменения из main в ветку пользователя
             MergeResult pullResult = git.merge()
                     .include(git.getRepository().findRef(mainBranch))
                     .setFastForward(MergeCommand.FastForwardMode.NO_FF)
@@ -477,13 +491,10 @@ public class GitService {
 
             if (pullResult.getMergeStatus().equals(MergeResult.MergeStatus.CONFLICTING)) {
                 System.out.println("Конфликты при подтягивании main → user: " + pullResult.getConflicts());
-                // Но не прерываем процесс
             }
 
-            // 3. Переключаемся на main
             git.checkout().setName(mainBranch).call();
 
-            // 4. Сливаем ветку пользователя в main
             MergeResult finalMerge = git.merge()
                     .include(git.getRepository().findRef(userBranch))
                     .setFastForward(MergeCommand.FastForwardMode.NO_FF)
@@ -493,6 +504,8 @@ public class GitService {
 
             if (finalMerge.getMergeStatus().isSuccessful()) {
                 String newBranchName = createNewUserBranchFromMain(documentId, authorName);
+                Long userId = userService.findByUsername(authorName).getId();
+                userDocumentRepository.updateBranchName(userId, documentId, newBranchName);
                 System.out.println("Создана новая ветка: " + newBranchName);
                 return newBranchName;
             } else {
