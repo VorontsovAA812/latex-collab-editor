@@ -75,6 +75,11 @@ public class DocumentServiceImpl implements DocumentService {
     }
 
 
+    @Transactional(readOnly = true)
+    public Document findById(Long id) {
+        return documentRepo.findById(id)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Документ не найден"));
+    }
 
 
     @Transactional(readOnly = true)

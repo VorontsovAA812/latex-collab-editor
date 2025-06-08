@@ -1,5 +1,7 @@
 package com.example.demo.service;
 
+import com.example.demo.domain.Document;
+import com.example.demo.domain.User;
 import com.example.demo.rest.dto.DocumentDtos.ContentRequestDto;
 import com.example.demo.rest.dto.DocumentDtos.DocumentListDTO;
 import com.example.demo.rest.dto.DocumentDtos.DocumentResponse;
@@ -20,6 +22,7 @@ public interface DocumentService {
     DocumentResponse findById(Long id, boolean includeContent) throws IOException;
 
     DocumentResponse updateDocument(Long id, NewDocumentRequest updateDocumentRequest, Authentication authentication) throws GitAPIException, IOException;
+    Document findById(Long id);
 
 
     Long deleteDocument(Long id, Authentication authentication) throws IOException;

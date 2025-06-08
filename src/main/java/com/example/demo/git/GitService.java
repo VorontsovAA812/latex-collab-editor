@@ -410,7 +410,14 @@ public class GitService {
         String branchName = userDocumentRepository.findByUserIdAndDocumentId(userId, documentId)
                 .map(UserDocument::getBranchName)
                 .orElseGet(() -> {
-                    String newBranch = createNewUserBranchFromMain(documentId, authorName);
+                    String newBranch = null;
+                    try {
+                        newBranch = createNewUserBranchFromMain(documentId, authorName);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    } catch (GitAPIException e) {
+                        throw new RuntimeException(e);
+                    }
                     User user = userService.findById(userId);
                     Document document = documentService.findById(documentId);
 
