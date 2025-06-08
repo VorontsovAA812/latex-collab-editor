@@ -426,14 +426,17 @@ public class GitService {
         String branchName = userDocumentRepository.findByUserIdAndDocumentId(userId, documentId)
                 .map(UserDocument::getBranchName)
                 .orElseGet(() -> {
-                    String newBranch = null;
+                    String newBranch;
                     try {
-                        newBranch = createNewUserBranchFromMain(documentId, authorName);
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    } catch (GitAPIException e) {
-                        throw new RuntimeException(e);
+                        if (hasMainBranch(documentId)) {
+                            newBranch = createNewUserBranchFromMain(documentId, authorName);
+                        } else {
+                            newBranch = createInitialUserBranch(documentId, authorName);
+                        }
+                    } catch (Exception e) {
+                        throw new RuntimeException("Не удалось создать ветку", e);
                     }
+
                     User user = userService.findById(userId);
                     Document document = documentService.findById(documentId);
 
@@ -442,7 +445,7 @@ public class GitService {
                     userDoc.setUser(user);
                     userDoc.setDocument(document);
                     userDoc.setBranchName(newBranch);
-                    userDoc.setPermissionLevel("write"); // или PermissionLevel.OWNER если строка "owner" допустима
+                    userDoc.setPermissionLevel("write");
                     userDoc.setAddedAt(Instant.now());
 
                     userDocumentRepository.save(userDoc);
@@ -451,9 +454,12 @@ public class GitService {
                 });
 
         try (Git git = Git.open(repoPath.toFile())) {
-            // Если ветка в БД указана, но её нет в Git — создаём заново
+            // Если ветка есть в БД, но не в Git — создаём заново
             if (git.getRepository().findRef(branchName) == null) {
-                branchName = createNewUserBranchFromMain(documentId, authorName);
+                branchName = hasMainBranch(documentId)
+                        ? createNewUserBranchFromMain(documentId, authorName)
+                        : createInitialUserBranch(documentId, authorName);
+
                 userDocumentRepository.updateBranchName(userId, documentId, branchName);
             }
 

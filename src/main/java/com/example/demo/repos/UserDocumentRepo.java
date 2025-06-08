@@ -17,6 +17,7 @@ public interface UserDocumentRepo extends JpaRepository<UserDocument, UserDocume
 
     // Обновление имени ветки после успешного слияния
     @Modifying
+    @Transactional
     @Query("UPDATE UserDocument ud SET ud.branchName = :newBranch WHERE ud.id.userId = :userId AND ud.id.documentId = :documentId")
     void updateBranchName(Long userId, Long documentId, String newBranch);
 }
