@@ -17,6 +17,7 @@ import org.eclipse.jgit.api.errors.RefAlreadyExistsException;
 import org.eclipse.jgit.api.errors.RefNotFoundException;
 import org.eclipse.jgit.lib.ObjectId;
 import org.eclipse.jgit.lib.ObjectLoader;
+import org.eclipse.jgit.lib.Ref;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevTree;
@@ -587,29 +588,41 @@ public class GitService {
             }
 
         }
-
     public String createNewUserBranchFromMain(Long documentId, String username) throws IOException, GitAPIException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
-        try (Git git = Git.open(repoPath.toFile()))
-        {
-            if( git.getRepository().findRef("main")==null)
-            {
-                throw new IllegalStateException("main не существует — нельзя создать ветку.");
 
+        try (Git git = Git.open(repoPath.toFile())) {
+            Repository repository = git.getRepository();
+
+            // 1. Проверка, что ветка main существует
+            Ref mainRef = repository.findRef("refs/heads/main");
+            if (mainRef == null) {
+                throw new IllegalStateException("main не существует — нельзя создать ветку.");
             }
 
-            String newBranchName =generateSufForUserBranch(documentId, username);
-
+            // 2. Переключаемся на main, чтобы HEAD точно указывал на её последний коммит
             git.checkout().setName("main").call();
-            git.branchCreate().setName(newBranchName).setStartPoint("main").call();
+
+            // 3. Получаем актуальный коммит HEAD (main)
+            ObjectId mainHead = repository.resolve("HEAD");
+
+            // 4. Генерируем имя новой пользовательской ветки
+            String newBranchName = generateSufForUserBranch(documentId, username);
+
+            // 5. Создаём ветку от HEAD (main)
+            git.branchCreate()
+                    .setName(newBranchName)
+                    .setStartPoint(mainHead.getName()) // самый свежий коммит main
+                    .call();
+
+            // 6. Переключаемся в новую ветку
             git.checkout().setName(newBranchName).call();
 
-            return  newBranchName;
+            return newBranchName;
         }
-
-
-
     }
+
+
     public String generateSufForUserBranch(Long documentId, String username) throws IOException {
         Path repoPath = Paths.get(sourcePath, documentId.toString()).toAbsolutePath().normalize();
         try (Git git = Git.open(repoPath.toFile())) {
