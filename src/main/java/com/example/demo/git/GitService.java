@@ -375,7 +375,7 @@ public class GitService {
                     // Делаем новый коммит
                     git.add().addFilepattern("main.tex").call();
                     commited = git.commit()
-                            .setMessage("Откат к версии " + commitId)
+                            .setMessage("Откат к версии " + commitObjectId.abbreviate(7).name())
                             .call();
                 }
 
