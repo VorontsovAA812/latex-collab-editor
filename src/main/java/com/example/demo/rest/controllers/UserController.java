@@ -13,6 +13,8 @@ import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @Controller
@@ -73,4 +75,20 @@ public class UserController {
 
 
         return ResponseEntity.ok(user.getId());
-}}
+}
+    @GetMapping("/currentname")
+    public ResponseEntity<Map<String, Object>> getCurrentName(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+
+        CustomUserDetails user = (CustomUserDetails) authentication.getPrincipal();
+
+        Map<String, Object> result = new HashMap<>();
+        result.put("id", user.getId());
+        result.put("username", user.getUsername());
+
+        return ResponseEntity.ok(result);
+    }
+
+}
