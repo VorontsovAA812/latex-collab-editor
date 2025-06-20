@@ -76,7 +76,6 @@ public class LatexService {
         Path pdfFilePath = Paths.get(workDir, filenamePdf); // создаем путь  ./latex-files/documentId/title.tex
 
         Files.writeString(texFilePath, latexSource); //создает файл tex и записыванет в него строку latexSourse
-        // подумать над путями!!!
 
         // Команда для компиляции через Docker
 
@@ -88,7 +87,6 @@ public class LatexService {
                 CONTAINER_NAME, containerPath, texFile
         );
 
-        // РЕЖИМ НОНСТОП НАДО ЛИ ИЛИ НЕТ?
 
         Process process = Runtime.getRuntime().exec(compileCommand);
         StringBuilder output = new StringBuilder();
